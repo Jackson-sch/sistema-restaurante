@@ -1,36 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sistema de Restaurante - Perú
 
-## Getting Started
+Sistema de gestión para restaurantes desarrollado con Next.js, Prisma, Auth.js y shadcn/ui.
 
-First, run the development server:
+## 🚀 Tecnologías
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Next.js 16** - Framework de React con App Router
+- **TypeScript** - Tipado estático
+- **Prisma** - ORM para base de datos
+- **Auth.js (NextAuth.js v5)** - Autenticación
+- **shadcn/ui** - Componentes UI
+- **Tailwind CSS** - Estilos
+- **react-hook-form** - Manejo de formularios
+- **zod** - Validación de esquemas
+
+## 📦 Instalación
+
+1. Clona el repositorio
+2. Instala las dependencias:
+   ```bash
+   npm install
+   ```
+
+3. Configura las variables de entorno:
+   - Copia el contenido de `env-template.txt` a un nuevo archivo `.env`
+   - Actualiza las variables con tus valores reales
+
+4. Configura la base de datos:
+   ```bash
+   npx prisma generate
+   npx prisma migrate dev
+   ```
+
+5. Inicia el servidor de desarrollo:
+   ```bash
+   npm run dev
+   ```
+
+## 📁 Estructura del Proyecto
+
+```
+sistema-restaurante/
+├── src/
+│   ├── app/              # App Router de Next.js
+│   │   └── api/auth/     # Rutas de autenticación
+│   ├── components/       # Componentes React
+│   │   └── ui/          # Componentes de shadcn/ui
+│   ├── lib/             # Utilidades y configuraciones
+│   ├── types/           # Definiciones de tipos TypeScript
+│   └── auth.ts          # Configuración de Auth.js
+├── prisma/
+│   └── schema.prisma    # Esquema de base de datos
+└── public/              # Archivos estáticos
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🔐 Autenticación
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+El sistema utiliza Auth.js (NextAuth.js v5) con Prisma Adapter. Para agregar providers de autenticación, edita `src/auth.ts`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🗄️ Base de Datos
 
-## Learn More
+El proyecto está configurado para usar PostgreSQL. Asegúrate de tener PostgreSQL instalado y corriendo, o actualiza la configuración en `prisma/schema.prisma` para usar otra base de datos compatible.
 
-To learn more about Next.js, take a look at the following resources:
+## 📝 Próximos Pasos
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- [ ] Definir modelos de base de datos en `prisma/schema.prisma`
+- [ ] Configurar providers de autenticación
+- [ ] Crear componentes UI base
+- [ ] Implementar funcionalidades del restaurante
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🛠️ Scripts Disponibles
 
-## Deploy on Vercel
+- `npm run dev` - Inicia el servidor de desarrollo
+- `npm run build` - Construye la aplicación para producción
+- `npm start` - Inicia el servidor de producción
+- `npm run lint` - Ejecuta el linter
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📄 Licencia
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Este proyecto es privado y está protegido por derechos de autor.

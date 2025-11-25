@@ -1,0 +1,571 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "./generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// CONFIGURACIÓN Y MULTI-TENANT
+// ============================================
+
+model Restaurant {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  logo         String?
+  address      String?
+  phone        String?
+  email        String?
+  ruc          String? // Para Perú
+  businessType String? // CEVICHERIA, POLLERIA, CHIFA, etc.
+  timezone     String   @default("America/Lima")
+  currency     String   @default("PEN")
+  settings     Json? // Configuraciones flexibles
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  users         User[]
+  categories    Category[]
+  tables        Table[]
+  orders        Order[]
+  zones         Zone[]
+  receiptSeries ReceiptSeries[]
+  // ... otras relaciones
+}
+
+model ReceiptSeries {
+  id            String     @id @default(cuid())
+  restaurantId  String
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id])
+  type          String // BOLETA, FACTURA, NOTA_VENTA
+  series        String // B001, F001
+  currentNumber Int        @default(0)
+  active        Boolean    @default(true)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@unique([restaurantId, type, series])
+}
+
+// ============================================
+// AUTH.JS MODELS
+// ============================================
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ============================================
+// USUARIOS Y PERMISOS
+// ============================================
+
+model User {
+  id            String      @id @default(cuid())
+  name          String?
+  email         String      @unique
+  emailVerified DateTime?
+  password      String?
+  image         String?
+  role          String      @default("USER")
+  restaurantId  String? // Para multi-tenant
+  restaurant    Restaurant? @relation(fields: [restaurantId], references: [id])
+  active        Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  accounts        Account[]
+  sessions        Session[]
+  orders          Order[]
+  cashRegisters   CashRegister[]
+  permissions     UserPermission[]
+  cashierPayments Payment[]        @relation("CashierPayments")
+}
+
+model Permission {
+  id          String           @id @default(cuid())
+  name        String           @unique // "create_order", "cancel_order", "view_reports"
+  description String?
+  module      String // "orders", "products", "reports", "settings"
+  users       UserPermission[]
+}
+
+model UserPermission {
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, permissionId])
+}
+
+// ============================================
+// PRODUCTOS FLEXIBLE
+// ============================================
+
+model Category {
+  id           String     @id @default(cuid())
+  name         String
+  slug         String
+  image        String?
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  parentId     String? // Para subcategorías
+  parent       Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children     Category[] @relation("CategoryTree")
+  order        Int        @default(0) // Para ordenar en menú
+  active       Boolean    @default(true)
+  products     Product[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([restaurantId, slug])
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  sku         String? // Para control interno
+  price       Decimal  @db.Decimal(10, 2)
+  cost        Decimal? @db.Decimal(10, 2) // Costo para calcular utilidad
+  image       String?
+  images      String[] // Múltiples imágenes
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  available   Boolean  @default(true)
+  featured    Boolean  @default(false) // Para destacar en menú
+
+  // Configuración flexible
+  preparationTime Int? // Minutos
+  allergens       String[] // ["gluten", "lactosa", "mariscos"]
+  tags            String[] // ["picante", "vegetariano", "menu-del-dia"]
+  metadata        Json? // Para datos adicionales flexibles
+
+  // Relaciones
+  modifierGroups ProductModifierGroup[]
+  orderItems     OrderItem[]
+  combos         ComboProduct[]
+  variants       ProductVariant[]
+  ingredients    ProductIngredient[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([available])
+}
+
+// ============================================
+// VARIANTES Y MODIFICADORES (Muy importante!)
+// ============================================
+
+model ProductVariant {
+  id          String  @id @default(cuid())
+  productId   String
+  product     Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name        String // "Personal", "Mediano", "Familiar"
+  description String? // "Porción individual", "Para 3-4 personas"
+  sku         String?
+  price       Decimal @db.Decimal(10, 2)
+  available   Boolean @default(true)
+  order       Int     @default(0)
+}
+
+model ModifierGroup {
+  id          String                 @id @default(cuid())
+  name        String // "Tamaño", "Agregados", "Sin ingredientes"
+  required    Boolean                @default(false)
+  multiSelect Boolean                @default(true)
+  minSelect   Int                    @default(0)
+  maxSelect   Int? // null = sin límite
+  products    ProductModifierGroup[]
+  modifiers   Modifier[]
+  createdAt   DateTime               @default(now())
+}
+
+model ProductModifierGroup {
+  productId       String
+  product         Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  modifierGroupId String
+  modifierGroup   ModifierGroup @relation(fields: [modifierGroupId], references: [id], onDelete: Cascade)
+  order           Int           @default(0)
+
+  @@id([productId, modifierGroupId])
+}
+
+model Modifier {
+  id              String              @id @default(cuid())
+  name            String // "Ají extra", "Sin cebolla", "Papas grandes"
+  price           Decimal             @default(0) @db.Decimal(10, 2)
+  modifierGroupId String
+  modifierGroup   ModifierGroup       @relation(fields: [modifierGroupId], references: [id], onDelete: Cascade)
+  available       Boolean             @default(true)
+  order           Int                 @default(0)
+  orderItemMods   OrderItemModifier[]
+}
+
+// ============================================
+// COMBOS
+// ============================================
+
+model Combo {
+  id          String         @id @default(cuid())
+  name        String // "Combo Ejecutivo", "Duo Familiar"
+  description String?
+  price       Decimal        @db.Decimal(10, 2)
+  image       String?
+  active      Boolean        @default(true)
+  products    ComboProduct[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model ComboProduct {
+  comboId   String
+  combo     Combo   @relation(fields: [comboId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int     @default(1)
+
+  @@id([comboId, productId])
+}
+
+// ============================================
+// MESAS Y ZONAS
+// ============================================
+
+model Zone {
+  id           String     @id @default(cuid())
+  name         String // "Terraza", "Salón Principal", "VIP"
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  order        Int        @default(0)
+  tables       Table[]
+  createdAt    DateTime   @default(now())
+}
+
+model Table {
+  id           String        @id @default(cuid())
+  number       String
+  capacity     Int
+  zoneId       String?
+  zone         Zone?         @relation(fields: [zoneId], references: [id])
+  restaurantId String
+  restaurant   Restaurant    @relation(fields: [restaurantId], references: [id])
+  status       String        @default("AVAILABLE")
+  qrCode       String?       @unique // Para pedidos por QR
+  orders       Order[]
+  reservations Reservation[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@unique([restaurantId, number])
+}
+
+// ============================================
+// ÓRDENES Y PAGOS
+// ============================================
+
+model Order {
+  id          String  @id @default(cuid())
+  orderNumber String  @unique // O-0001, O-0002
+  paymentCode String? @unique // PAY-0001, PAY-0002 - Código para búsqueda de pago
+  type        String  @default("DINE_IN") // DINE_IN, TAKEOUT, DELIVERY
+
+  // Relaciones
+  restaurantId   String
+  restaurant     Restaurant    @relation(fields: [restaurantId], references: [id])
+  tableId        String?
+  table          Table?        @relation(fields: [tableId], references: [id])
+  userId         String? // Mesero/Usuario que creó
+  user           User?         @relation(fields: [userId], references: [id])
+  cashRegisterId String?
+  cashRegister   CashRegister? @relation(fields: [cashRegisterId], references: [id])
+
+  // Estado
+  status String @default("PENDING")
+  // PENDING -> CONFIRMED -> PREPARING -> READY -> SERVED -> COMPLETED
+  // CANCELLED (en cualquier momento)
+
+  paymentStatus String @default("PENDING") // PENDING, PARTIAL, PAID, REFUNDED
+
+  // Cliente
+  customerName    String?
+  customerPhone   String?
+  customerEmail   String?
+  deliveryAddress String?
+
+  // Montos
+  subtotal Decimal @db.Decimal(10, 2)
+  tax      Decimal @default(0) @db.Decimal(10, 2)
+  discount Decimal @default(0) @db.Decimal(10, 2)
+  tip      Decimal @default(0) @db.Decimal(10, 2)
+  total    Decimal @db.Decimal(10, 2)
+
+  // Items y pagos
+  items    OrderItem[]
+  payments Payment[]
+
+  // Notas y tracking
+  notes              String?
+  cancellationReason String?
+
+  // Timestamps
+  confirmedAt DateTime?
+  preparingAt DateTime?
+  readyAt     DateTime?
+  servedAt    DateTime?
+  completedAt DateTime?
+  cancelledAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([restaurantId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([paymentCode])
+  @@index([paymentStatus])
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  variantId String? // Si tiene variante
+
+  quantity  Int
+  unitPrice Decimal @db.Decimal(10, 2)
+  subtotal  Decimal @db.Decimal(10, 2)
+
+  status   String  @default("PENDING") // PENDING, PREPARING, READY, SERVED
+  priority Int     @default(0) // Para cocina
+  notes    String? // "Sin cebolla", "Picante aparte"
+
+  modifiers OrderItemModifier[]
+
+  preparedAt DateTime?
+  servedAt   DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([orderId])
+  @@index([status])
+}
+
+model OrderItemModifier {
+  id          String    @id @default(cuid())
+  orderItemId String
+  orderItem   OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  modifierId  String
+  modifier    Modifier  @relation(fields: [modifierId], references: [id])
+  quantity    Int       @default(1)
+  price       Decimal   @db.Decimal(10, 2)
+}
+
+// ============================================
+// PAGOS
+// ============================================
+
+model Payment {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id])
+  cashierId String? // Usuario que registró el pago
+  cashier   User?   @relation("CashierPayments", fields: [cashierId], references: [id])
+  method    String // CASH, CARD, YAPE, PLIN, TRANSFER, MIXED
+  amount    Decimal @db.Decimal(10, 2)
+  reference String? // Número de operación
+  status    String  @default("COMPLETED") // PENDING, COMPLETED, FAILED, REFUNDED
+
+  // Para Perú
+  receiptType     String? // BOLETA, FACTURA, NOTA
+  receiptNumber   String?
+  customerDoc     String? // DNI/RUC
+  customerName    String?
+  customerAddress String?
+
+  notes     String? // Observaciones adicionales
+  metadata  Json? // Para datos adicionales del pago
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orderId])
+  @@index([cashierId])
+  @@index([createdAt])
+}
+
+// ============================================
+// CAJA Y TURNOS
+// ============================================
+
+model CashRegister {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  turn         String? // "MAÑANA", "TARDE", "NOCHE"
+  openingCash  Decimal  @db.Decimal(10, 2)
+  closingCash  Decimal? @db.Decimal(10, 2)
+  expectedCash Decimal? @db.Decimal(10, 2)
+  difference   Decimal? @db.Decimal(10, 2)
+
+  notes String?
+
+  openedAt DateTime  @default(now())
+  closedAt DateTime?
+
+  orders       Order[]
+  transactions CashTransaction[]
+}
+
+model CashTransaction {
+  id             String       @id @default(cuid())
+  cashRegisterId String
+  cashRegister   CashRegister @relation(fields: [cashRegisterId], references: [id])
+  type           String // INCOME, EXPENSE, WITHDRAWAL
+  amount         Decimal      @db.Decimal(10, 2)
+  concept        String
+  reference      String?
+  createdAt      DateTime     @default(now())
+}
+
+// ============================================
+// DESCUENTOS Y PROMOCIONES
+// ============================================
+
+model Discount {
+  id    String  @id @default(cuid())
+  code  String  @unique
+  name  String
+  type  String // PERCENTAGE, FIXED_AMOUNT, FREE_ITEM
+  value Decimal @db.Decimal(10, 2)
+
+  // Restricciones
+  minOrderAmount Decimal? @db.Decimal(10, 2)
+  maxDiscount    Decimal? @db.Decimal(10, 2)
+  usageLimit     Int?
+  usageCount     Int      @default(0)
+
+  // Validez
+  validFrom  DateTime
+  validUntil DateTime
+  active     Boolean  @default(true)
+
+  // Aplicabilidad
+  applicableTo String[] // ["ALL", "CATEGORY:id", "PRODUCT:id"]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ============================================
+// RESERVACIONES
+// ============================================
+
+model Reservation {
+  id                String @id @default(cuid())
+  reservationNumber String @unique
+  tableId           String
+  table             Table  @relation(fields: [tableId], references: [id])
+
+  customerName  String
+  customerPhone String
+  customerEmail String?
+
+  date     DateTime
+  duration Int      @default(120) // Minutos
+  guests   Int
+
+  status String  @default("PENDING") // PENDING, CONFIRMED, CANCELLED, COMPLETED, NO_SHOW
+  notes  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([date])
+  @@index([status])
+}
+
+// ============================================
+// INVENTARIO (Opcional pero recomendado)
+// ============================================
+
+model Ingredient {
+  id           String  @id @default(cuid())
+  name         String
+  unit         String // kg, l, unidad
+  currentStock Decimal @db.Decimal(10, 3)
+  minStock     Decimal @db.Decimal(10, 3)
+  cost         Decimal @db.Decimal(10, 2)
+
+  products  ProductIngredient[]
+  movements StockMovement[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProductIngredient {
+  productId    String
+  product      Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  ingredientId String
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+  quantity     Decimal    @db.Decimal(10, 3)
+
+  @@id([productId, ingredientId])
+}
+
+model StockMovement {
+  id           String     @id @default(cuid())
+  ingredientId String
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+  type         String // IN, OUT, ADJUSTMENT, WASTE
+  quantity     Decimal    @db.Decimal(10, 3)
+  reason       String?
+  reference    String? // Orden relacionada
+  createdAt    DateTime   @default(now())
+
+  @@index([ingredientId])
+  @@index([createdAt])
+}
