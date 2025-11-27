@@ -4,6 +4,9 @@ import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
 import { Prisma } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
+import { requirePermission } from '@/lib/auth-utils';
+import { PERMISSIONS } from '@/lib/permissions';
+import { deductStockForOrder } from "@/actions/inventory";
 
 export async function getOrders({
     page = 1,
@@ -113,6 +116,8 @@ export async function createOrder(data: {
     }
 
     try {
+        await requirePermission(PERMISSIONS.ORDERS_CREATE);
+
         // Validate table if provided
         if (data.tableId) {
             const table = await prisma.table.findFirst({
@@ -299,6 +304,11 @@ export async function updateOrderStatus(id: string, status: string) {
                 where: { id: order.tableId },
                 data: { status: 'AVAILABLE' },
             });
+        }
+
+        // Deduct stock if completed
+        if (status === 'COMPLETED') {
+            await deductStockForOrder(id)
         }
 
         revalidatePath('/dashboard/kitchen');

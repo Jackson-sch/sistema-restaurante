@@ -3,6 +3,8 @@
 import { prisma } from "@/lib/prisma"
 import { tableSchema, type TableInput } from "@/lib/schemas/tables"
 import { revalidatePath } from "next/cache"
+import { requirePermission } from "@/lib/auth-utils"
+import { PERMISSIONS } from "@/lib/permissions"
 
 export async function getTables() {
     try {
@@ -44,6 +46,8 @@ import { getRestaurantId } from "@/lib/restaurant"
 
 export async function createTable(data: TableInput) {
     try {
+        await requirePermission(PERMISSIONS.TABLES_CREATE)
+
         const validated = tableSchema.parse(data)
         const restaurantId = await getRestaurantId()
 
@@ -68,6 +72,9 @@ export async function createTable(data: TableInput) {
         revalidatePath("/dashboard/tables")
         return { success: true }
     } catch (error) {
+        if (error instanceof Error) {
+            return { success: false, error: error.message }
+        }
         return { success: false, error: "Error al crear la mesa" }
     }
 }
@@ -87,6 +94,8 @@ export async function updateTableStatus(id: string, status: "AVAILABLE" | "OCCUP
 
 export async function updateTable(id: string, data: Partial<TableInput>) {
     try {
+        await requirePermission(PERMISSIONS.TABLES_UPDATE)
+
         const validated = tableSchema.partial().parse(data)
 
         // If number is being updated, check for duplicates
@@ -113,6 +122,9 @@ export async function updateTable(id: string, data: Partial<TableInput>) {
         revalidatePath("/dashboard/tables")
         return { success: true }
     } catch (error) {
+        if (error instanceof Error) {
+            return { success: false, error: error.message }
+        }
         return { success: false, error: "Error al actualizar la mesa" }
     }
 }
@@ -120,6 +132,8 @@ export async function updateTable(id: string, data: Partial<TableInput>) {
 
 export async function deleteTable(id: string) {
     try {
+        await requirePermission(PERMISSIONS.TABLES_DELETE)
+
         // Check if table has active orders
         const table = await prisma.table.findUnique({
             where: { id },
@@ -150,6 +164,9 @@ export async function deleteTable(id: string) {
         revalidatePath('/dashboard/zones');
         return { success: true };
     } catch (error) {
+        if (error instanceof Error) {
+            return { success: false, error: error.message }
+        }
         return { success: false, error: 'Error al eliminar la mesa' };
     }
 }

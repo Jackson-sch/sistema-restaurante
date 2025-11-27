@@ -503,6 +503,7 @@ export const IngredientScalarFieldEnum = {
   currentStock: 'currentStock',
   minStock: 'minStock',
   cost: 'cost',
+  restaurantId: 'restaurantId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -511,8 +512,10 @@ export type IngredientScalarFieldEnum = (typeof IngredientScalarFieldEnum)[keyof
 
 
 export const ProductIngredientScalarFieldEnum = {
+  id: 'id',
   productId: 'productId',
   ingredientId: 'ingredientId',
+  variantId: 'variantId',
   quantity: 'quantity'
 } as const
 

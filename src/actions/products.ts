@@ -3,6 +3,8 @@
 import { prisma } from "@/lib/prisma"
 import { productSchema, type ProductInput } from "@/lib/schemas/menu"
 import { revalidatePath } from "next/cache"
+import { requirePermission } from "@/lib/auth-utils"
+import { PERMISSIONS } from "@/lib/permissions"
 
 import { type ProductWithCategory } from "@/lib/types/product"
 
@@ -29,6 +31,8 @@ export async function getProducts(): Promise<{ success: boolean; data?: ProductW
 
 export async function createProduct(data: ProductInput) {
     try {
+        await requirePermission(PERMISSIONS.PRODUCTS_CREATE)
+
         const validated = productSchema.parse(data)
 
         await prisma.product.create({
@@ -38,12 +42,17 @@ export async function createProduct(data: ProductInput) {
         revalidatePath("/dashboard/menu/dishes")
         return { success: true }
     } catch (error) {
+        if (error instanceof Error) {
+            return { success: false, error: error.message }
+        }
         return { success: false, error: "Error al crear el producto" }
     }
 }
 
 export async function updateProduct(id: string, data: Partial<ProductInput>) {
     try {
+        await requirePermission(PERMISSIONS.PRODUCTS_UPDATE)
+
         const validated = productSchema.partial().parse(data)
 
         await prisma.product.update({
@@ -54,18 +63,26 @@ export async function updateProduct(id: string, data: Partial<ProductInput>) {
         revalidatePath("/dashboard/menu/dishes")
         return { success: true }
     } catch (error) {
+        if (error instanceof Error) {
+            return { success: false, error: error.message }
+        }
         return { success: false, error: "Error al actualizar el producto" }
     }
 }
 
 export async function deleteProduct(id: string) {
     try {
+        await requirePermission(PERMISSIONS.PRODUCTS_DELETE)
+
         await prisma.product.delete({
             where: { id }
         })
         revalidatePath("/dashboard/menu/dishes")
         return { success: true }
     } catch (error) {
+        if (error instanceof Error) {
+            return { success: false, error: error.message }
+        }
         return { success: false, error: "Error al eliminar el producto" }
     }
 }

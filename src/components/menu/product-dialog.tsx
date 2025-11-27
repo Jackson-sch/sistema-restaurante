@@ -13,6 +13,9 @@ import { getProductOptions } from "@/actions/product-options"
 import { VariantManager } from "./variant-manager"
 import { ModifierManager } from "./modifier-manager"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { RecipeManager } from "@/components/inventory/recipe-manager"
+
+
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -37,6 +40,9 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 
+import { usePermissions } from "@/hooks/use-permissions"
+import { PERMISSIONS } from "@/lib/permissions"
+
 interface ProductDialogProps {
     categories: Category[]
     product?: ProductWithCategory
@@ -44,6 +50,7 @@ interface ProductDialogProps {
 }
 
 export function ProductDialog({ categories, product, trigger }: ProductDialogProps) {
+    const { hasPermission } = usePermissions()
     const [open, setOpen] = useState(false)
     const [isPending, startTransition] = useTransition()
     const isEditing = !!product
@@ -58,6 +65,12 @@ export function ProductDialog({ categories, product, trigger }: ProductDialogPro
     const [variants, setVariants] = useState<any[]>([])
     const [modifierGroups, setModifierGroups] = useState<any[]>([])
     const [activeTab, setActiveTab] = useState("general")
+
+    // Permission check - AFTER all hooks
+    const canCreate = hasPermission(PERMISSIONS.PRODUCTS_CREATE)
+    const canUpdate = hasPermission(PERMISSIONS.PRODUCTS_UPDATE)
+
+
 
     const fetchOptions = async () => {
         if (product?.id) {
@@ -84,7 +97,7 @@ export function ProductDialog({ categories, product, trigger }: ProductDialogPro
         watch,
         formState: { errors },
     } = useForm<ProductInput>({
-        resolver: zodResolver(productSchema),
+        resolver: zodResolver(productSchema) as any,
         defaultValues: {
             name: "",
             description: "",
@@ -179,6 +192,9 @@ export function ProductDialog({ categories, product, trigger }: ProductDialogPro
         })
     }
 
+    if (isEditing && !canUpdate) return null
+    if (!isEditing && !canCreate) return null
+
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
@@ -193,10 +209,11 @@ export function ProductDialog({ categories, product, trigger }: ProductDialogPro
                 </DialogHeader>
 
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
+                    <TabsList className="grid w-full grid-cols-4">
                         <TabsTrigger value="general">General</TabsTrigger>
                         <TabsTrigger value="variants" disabled={!isEditing}>Variantes</TabsTrigger>
                         <TabsTrigger value="modifiers" disabled={!isEditing}>Modificadores</TabsTrigger>
+                        <TabsTrigger value="recipe" disabled={!isEditing}>Receta</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="general" className="space-y-4 py-4">
@@ -335,6 +352,12 @@ export function ProductDialog({ categories, product, trigger }: ProductDialogPro
                                 modifierGroups={modifierGroups}
                                 onRefresh={fetchOptions}
                             />
+                        )}
+                    </TabsContent>
+
+                    <TabsContent value="recipe" className="py-4">
+                        {product && (
+                            <RecipeManager productId={product.id} variants={variants} />
                         )}
                     </TabsContent>
                 </Tabs>

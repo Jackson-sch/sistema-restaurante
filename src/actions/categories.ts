@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma"
 import { categorySchema, type CategoryInput } from "@/lib/schemas/menu"
 import { revalidatePath } from "next/cache"
 import { getRestaurantId } from "@/lib/restaurant"
+import { requirePermission } from "@/lib/auth-utils"
+import { PERMISSIONS } from "@/lib/permissions"
 
 export async function getCategories() {
     try {
@@ -21,6 +23,8 @@ export async function getCategories() {
 
 export async function createCategory(data: CategoryInput) {
     try {
+        await requirePermission(PERMISSIONS.CATEGORIES_CREATE)
+
         const validated = categorySchema.parse(data)
         const restaurantId = await getRestaurantId()
 
@@ -45,12 +49,17 @@ export async function createCategory(data: CategoryInput) {
         revalidatePath("/dashboard/menu/categories")
         return { success: true, data: newCategory }
     } catch (error) {
+        if (error instanceof Error) {
+            return { success: false, error: error.message }
+        }
         return { success: false, error: "Error al crear la categoría" }
     }
 }
 
 export async function updateCategory(id: string, data: CategoryInput) {
     try {
+        await requirePermission(PERMISSIONS.CATEGORIES_UPDATE)
+
         const validated = categorySchema.parse(data)
         const restaurantId = await getRestaurantId()
 
@@ -74,18 +83,26 @@ export async function updateCategory(id: string, data: CategoryInput) {
         revalidatePath("/dashboard/menu/categories")
         return { success: true, data: updatedCategory }
     } catch (error) {
+        if (error instanceof Error) {
+            return { success: false, error: error.message }
+        }
         return { success: false, error: "Error al actualizar la categoría" }
     }
 }
 
 export async function deleteCategory(id: string) {
     try {
+        await requirePermission(PERMISSIONS.CATEGORIES_DELETE)
+
         await prisma.category.delete({
             where: { id }
         })
         revalidatePath("/dashboard/menu/categories")
         return { success: true }
     } catch (error) {
+        if (error instanceof Error) {
+            return { success: false, error: error.message }
+        }
         return { success: false, error: "Error al eliminar la categoría" }
     }
 }

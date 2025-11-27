@@ -21,7 +21,11 @@ interface NewOrderDialogProps {
     products: ProductWithRelations[]
 }
 
+import { usePermissions } from "@/hooks/use-permissions"
+import { PERMISSIONS } from "@/lib/permissions"
+
 export function NewOrderDialog({ categories, products }: NewOrderDialogProps) {
+    const { hasPermission } = usePermissions()
     const [open, setOpen] = useState(false)
     const [tables, setTables] = useState<TableData[]>([])
 
@@ -39,6 +43,10 @@ export function NewOrderDialog({ categories, products }: NewOrderDialogProps) {
             fetchTables()
         }
     }, [open])
+
+    if (!hasPermission(PERMISSIONS.ORDERS_CREATE)) {
+        return null
+    }
 
     return (
         <Drawer open={open} onOpenChange={setOpen} direction="right">

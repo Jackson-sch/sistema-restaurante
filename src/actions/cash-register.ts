@@ -11,6 +11,8 @@ import {
     type CloseShiftInput,
     type TransactionInput
 } from "@/lib/schemas/cash-register"
+import { requirePermission } from "@/lib/auth-utils"
+import { PERMISSIONS } from "@/lib/permissions"
 
 export async function checkOpenShift() {
     const session = await auth()
@@ -53,6 +55,8 @@ export async function openShift(data: OpenShiftInput) {
     }
 
     try {
+        await requirePermission(PERMISSIONS.CASH_REGISTER_OPEN);
+
         // Check if already open
         const existing = await prisma.cashRegister.findFirst({
             where: {
@@ -89,6 +93,8 @@ export async function closeShift(id: string, data: CloseShiftInput) {
     if (!session?.user?.id) return { success: false, error: "No autorizado" }
 
     try {
+        await requirePermission(PERMISSIONS.CASH_REGISTER_CLOSE);
+
         const validated = closeShiftSchema.parse(data)
 
         // Calculate expected cash

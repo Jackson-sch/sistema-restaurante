@@ -22,14 +22,25 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog"
 
+import { usePermissions } from "@/hooks/use-permissions"
+import { PERMISSIONS } from "@/lib/permissions"
+
 interface CategoryDialogProps {
     category?: Category
     trigger?: React.ReactNode
 }
 
 export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
+    const { hasPermission } = usePermissions()
     const [open, setOpen] = useState(false)
     const [isPending, startTransition] = useTransition()
+
+    // Permission check - AFTER all hooks
+    const canCreate = hasPermission(PERMISSIONS.CATEGORIES_CREATE)
+    const canUpdate = hasPermission(PERMISSIONS.CATEGORIES_UPDATE)
+    const isEditing = !!category
+
+
 
     const {
         register,
@@ -71,6 +82,9 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
             }
         })
     }
+
+    if (isEditing && !canUpdate) return null
+    if (!isEditing && !canCreate) return null
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>

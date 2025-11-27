@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
 import { Prisma } from '@prisma/client';
+import { requirePermission } from '@/lib/auth-utils';
+import { PERMISSIONS } from '@/lib/permissions';
 
 /**
  * Genera un código de pago único para una orden
@@ -161,6 +163,8 @@ export async function registerPayment(data: {
     }
 
     try {
+        await requirePermission(PERMISSIONS.PAYMENTS_CREATE);
+
         // Verificar que la orden existe y pertenece al restaurante
         const order = await prisma.order.findFirst({
             where: {
