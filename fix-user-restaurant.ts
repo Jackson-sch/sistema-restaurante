@@ -23,7 +23,8 @@ async function main() {
             data: {
                 name: "Restaurante Principal",
                 address: "Av. Principal 123",
-                phone: "555-0101"
+                phone: "555-0101",
+                slug: "restaurante-principal"
             }
         });
         console.log("Created restaurant:", restaurant);
@@ -54,7 +55,8 @@ async function main() {
             data: {
                 name: "Entradas",
                 restaurantId: restaurant.id,
-                order: 1
+                order: 1,
+                slug: "entradas"
             }
         });
 

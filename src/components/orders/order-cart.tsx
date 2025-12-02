@@ -22,6 +22,7 @@ interface OrderCartProps {
     tables: TableData[]
     selectedTable: TableData | null
     onTableChange: (table: TableData | null) => void
+    onClose?: () => void // For mobile drawer
 }
 
 export function OrderCart({
@@ -34,6 +35,7 @@ export function OrderCart({
     tables,
     selectedTable,
     onTableChange,
+    onClose,
 }: OrderCartProps) {
     const router = useRouter()
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -100,14 +102,27 @@ export function OrderCart({
     return (
         <div className="flex flex-col h-full bg-background border rounded-xl shadow-lg overflow-hidden">
             {/* Header */}
-            <div className="p-4 border-b bg-muted/30 space-y-3">
+            <div className="p-3 md:p-4 border-b bg-muted/30 space-y-2 md:space-y-3">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <Receipt className="h-5 w-5 text-primary" />
-                        <h2 className="font-semibold text-lg">Resumen de Orden</h2>
+                        <Receipt className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+                        <h2 className="font-semibold text-base md:text-lg">Resumen de Orden</h2>
                     </div>
-                    <div className="bg-primary/10 text-primary px-2 py-0.5 rounded-full text-xs font-medium">
-                        {items.length} ítems
+                    <div className="flex items-center gap-2">
+                        <div className="bg-primary/10 text-primary px-2 py-0.5 rounded-full text-xs font-medium">
+                            {items.length} ítems
+                        </div>
+                        {onClose && (
+                            <button
+                                onClick={onClose}
+                                className="md:hidden p-2 hover:bg-muted rounded-lg transition-colors"
+                                aria-label="Volver a productos"
+                            >
+                                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        )}
                     </div>
                 </div>
                 <TableSelector
@@ -207,7 +222,7 @@ export function OrderCart({
             </ScrollArea>
 
             {/* Footer Summary */}
-            <div className="bg-background border-t p-4 space-y-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-10">
+            <div className="bg-background border-t p-3 md:p-4 space-y-3 md:space-y-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-10">
                 <div className="space-y-2 text-sm">
                     <div className="flex justify-between text-muted-foreground">
                         <span>Subtotal</span>
@@ -216,14 +231,14 @@ export function OrderCart({
                     <Separator className="my-2" />
                     <div className="flex justify-between items-end">
                         <span className="font-semibold text-base">Total a Pagar</span>
-                        <span className="font-bold text-2xl tabular-nums text-primary tracking-tight">{formatCurrency(total)}</span>
+                        <span className="font-bold text-xl md:text-2xl tabular-nums text-primary tracking-tight">{formatCurrency(total)}</span>
                     </div>
                 </div>
 
                 <div className="grid grid-cols-4 gap-2">
                     <Button
                         variant="outline"
-                        className="col-span-1 h-12 border-destructive/20 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50 bg-transparent"
+                        className="col-span-1 h-11 md:h-12 border-destructive/20 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50 bg-transparent"
                         onClick={onClear}
                         disabled={items.length === 0 || isSubmitting}
                         title="Limpiar carrito"
@@ -232,7 +247,7 @@ export function OrderCart({
                     </Button>
                     <Button
                         className={cn(
-                            "col-span-3 h-12 font-bold text-base shadow-md transition-all",
+                            "col-span-3 h-11 md:h-12 font-bold text-sm md:text-base shadow-md transition-all",
                             "bg-primary hover:bg-primary/90 hover:scale-[1.01] active:scale-[0.99]"
                         )}
                         onClick={handleCreateOrder}

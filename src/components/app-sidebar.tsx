@@ -14,7 +14,8 @@ import {
   List,
   Grid,
   Wallet,
-  BarChart
+  BarChart,
+  TrendingUp
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -47,6 +48,11 @@ const data = {
       title: "Dashboard",
       url: "/dashboard",
       icon: LayoutDashboard,
+    },
+    {
+      title: "Analítica",
+      url: "/dashboard/analytics",
+      icon: TrendingUp,
     },
     {
       title: "Menú",
@@ -103,6 +109,10 @@ const data = {
           url: "/dashboard/tables",
         },
         {
+          title: "Mapa de Mesas",
+          url: "/dashboard/tables/map",
+        },
+        {
           title: "Zonas",
           url: "/dashboard/zones",
         },
@@ -152,6 +162,11 @@ export function AppSidebar({ user, restaurant, ...props }: React.ComponentProps<
   const navMain = data.navMain.map(item => ({ ...item, items: item.items ? [...item.items] : undefined })).filter(item => {
     // Dashboard is always visible
     if (item.url === "/dashboard" && !item.items) return true
+
+    // Analytics
+    if (item.title === "Analítica") {
+      return hasPermission(PERMISSIONS.REPORTS_SALES)
+    }
 
     // Menu (Products/Categories)
     if (item.title === "Menú") {

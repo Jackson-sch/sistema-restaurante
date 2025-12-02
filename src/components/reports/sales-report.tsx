@@ -308,7 +308,7 @@ export function SalesReport() {
                                     cursor={{ stroke: "var(--border)", strokeWidth: 1 }}
                                     content={
                                         <ChartTooltipContent
-                                            formatter={(value, name) => (
+                                            formatter={(value: any, name: any) => (
                                                 <div className="flex items-center justify-between gap-8">
                                                     <span className="text-muted-foreground">Ventas</span>
                                                     <span className="font-mono font-semibold">
@@ -344,7 +344,7 @@ export function SalesReport() {
                                     cursor={false}
                                     content={
                                         <ChartTooltipContent
-                                            formatter={(value, name, props) => {
+                                            formatter={(value: any, name: any, props: any) => {
                                                 const config = pieChartConfig[props.payload.method as keyof typeof pieChartConfig] as
                                                     | { label?: string }
                                                     | undefined

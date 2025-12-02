@@ -9,10 +9,11 @@ import {
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { CalendarIcon } from "lucide-react"
-import { format, subDays, startOfDay, endOfDay } from "date-fns"
+import { format, startOfDay, endOfDay } from "date-fns"
 import { es } from "date-fns/locale"
 import { DateRange } from "react-day-picker"
-import { useQueryState, parseAsIsoDateTime } from "nuqs"
+import { useRouter, useSearchParams, usePathname } from "next/navigation"
+import { useCallback } from "react"
 
 const presets = [
   { label: "Hoy", days: 0 },
@@ -23,35 +24,69 @@ const presets = [
 ]
 
 export function DateRangeFilter() {
-  const [from, setFrom] = useQueryState(
-    "from",
-    parseAsIsoDateTime.withDefault(startOfDay(new Date()))
-  )
-  const [to, setTo] = useQueryState(
-    "to",
-    parseAsIsoDateTime.withDefault(endOfDay(new Date()))
-  )
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
 
+  // Get current dates from URL params
+  const fromParam = searchParams.get("from")
+  const toParam = searchParams.get("to")
+
+  const from = fromParam ? new Date(fromParam) : null
+  const to = toParam ? new Date(toParam) : null
+
+  // Use current date as fallback for display
   const dateRange: DateRange = {
-    from: from,
-    to: to,
+    from: from || startOfDay(new Date()),
+    to: to || endOfDay(new Date()),
   }
+
+  const updateUrl = useCallback((fromDate: Date, toDate: Date) => {
+    // Format dates as local ISO strings (not UTC)
+    const formatLocalISO = (date: Date) => {
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      const hours = String(date.getHours()).padStart(2, '0')
+      const minutes = String(date.getMinutes()).padStart(2, '0')
+      const seconds = String(date.getSeconds()).padStart(2, '0')
+      const ms = String(date.getMilliseconds()).padStart(3, '0')
+      return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${ms}`
+    }
+
+    const params = new URLSearchParams()
+    params.set("from", formatLocalISO(fromDate))
+    params.set("to", formatLocalISO(toDate))
+    router.push(`${pathname}?${params.toString()}`, { scroll: false })
+  }, [router, pathname])
 
   const handlePresetClick = (days: number) => {
     const today = new Date()
-    const fromDate = days === 0 ? startOfDay(today) : startOfDay(subDays(today, days))
-    const toDate = endOfDay(today)
 
-    setFrom(fromDate)
-    setTo(toDate)
+    // Create start of day in local timezone
+    const fromDate = new Date(today)
+    if (days > 0) {
+      fromDate.setDate(fromDate.getDate() - days)
+    }
+    fromDate.setHours(0, 0, 0, 0)
+
+    // Create end of day in local timezone
+    const toDate = new Date(today)
+    toDate.setHours(23, 59, 59, 999)
+
+    updateUrl(fromDate, toDate)
   }
 
   const handleDateRangeChange = (range: DateRange | undefined) => {
-    if (range?.from) {
-      setFrom(startOfDay(range.from))
-    }
-    if (range?.to) {
-      setTo(endOfDay(range.to))
+    if (range?.from && range?.to) {
+      // Create dates in local timezone
+      const fromDate = new Date(range.from)
+      fromDate.setHours(0, 0, 0, 0)
+
+      const toDate = new Date(range.to)
+      toDate.setHours(23, 59, 59, 999)
+
+      updateUrl(fromDate, toDate)
     }
   }
 
@@ -71,7 +106,7 @@ export function DateRangeFilter() {
               // dark styles
               "dark:bg-background transform-gpu dark:[box-shadow:0_-20px_80px_-20px_#ffffff1f_inset] dark:[border:1px_solid_rgba(255,255,255,.1)]",
               preset.days === 0 &&
-              from.toDateString() === startOfDay(new Date()).toDateString() &&
+              from?.toDateString() === startOfDay(new Date()).toDateString() &&
               "bg-primary"
             )}
           >

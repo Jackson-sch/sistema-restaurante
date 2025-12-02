@@ -209,7 +209,7 @@ export function DatePickerWithRange({
                 initialFocus
                 mode="range"
                 defaultMonth={tempDate?.from || new Date()}
-                selected={tempDate}
+                selected={tempDate as any}
                 onSelect={setTempDate as any}
                 numberOfMonths={2}
                 locale={es}
@@ -220,7 +220,7 @@ export function DatePickerWithRange({
                 initialFocus
                 mode="range"
                 defaultMonth={tempDate?.from || new Date()}
-                selected={tempDate}
+                selected={tempDate as any}
                 onSelect={setTempDate as any}
                 numberOfMonths={1}
                 locale={es}

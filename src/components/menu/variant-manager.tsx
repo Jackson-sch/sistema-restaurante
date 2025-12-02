@@ -55,7 +55,7 @@ export function VariantManager({ productId, variants, onRefresh }: VariantManage
         setValue,
         watch,
         formState: { errors },
-    } = useForm<VariantInput>({
+    } = useForm({
         resolver: zodResolver(variantSchema),
         defaultValues: {
             productId,

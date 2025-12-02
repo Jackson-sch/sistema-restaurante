@@ -19,10 +19,9 @@ export function AlertsPanel({ alerts: initialAlerts }: AlertsPanelProps) {
   const criticalCount = alerts.filter(a => a.type === "critical").length
   const warningCount = alerts.filter(a => a.type === "warning").length
 
-  // Temporarily show even when empty for debugging
-  // if (alerts.length === 0) {
-  //   return null
-  // }
+  if (alerts.length === 0) {
+    return null
+  }
 
   return (
     <Card>
@@ -50,21 +49,13 @@ export function AlertsPanel({ alerts: initialAlerts }: AlertsPanelProps) {
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {alerts.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              ✓ No hay alertas - Todo funcionando correctamente
-              <br />
-              <span className="text-xs">(Debug: alerts array length = {alerts.length})</span>
-            </p>
-          ) : (
-            alerts.map((alert) => (
-              <AlertItem
-                key={alert.id}
-                alert={alert}
-                onDismiss={handleDismiss}
-              />
-            ))
-          )}
+          {alerts.map((alert) => (
+            <AlertItem
+              key={alert.id}
+              alert={alert}
+              onDismiss={handleDismiss}
+            />
+          ))}
         </div>
       </CardContent>
     </Card>

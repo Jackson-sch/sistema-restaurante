@@ -165,6 +165,21 @@ export async function registerPayment(data: {
     try {
         await requirePermission(PERMISSIONS.PAYMENTS_CREATE);
 
+        // Buscar caja abierta del usuario actual para asignar la venta
+        const openShift = await prisma.cashRegister.findFirst({
+            where: {
+                userId: session.user.id,
+                closedAt: null
+            }
+        });
+
+        if (!openShift) {
+            return {
+                success: false,
+                error: 'No tienes una caja abierta. Por favor, abre la caja antes de registrar pagos.'
+            };
+        }
+
         // Verificar que la orden existe y pertenece al restaurante
         const order = await prisma.order.findFirst({
             where: {
@@ -223,21 +238,12 @@ export async function registerPayment(data: {
             },
         });
 
-        // Buscar caja abierta del usuario actual para asignar la venta
-        const openShift = await prisma.cashRegister.findFirst({
-            where: {
-                userId: session.user.id,
-                closedAt: null
-            }
-        });
-
-        // Actualizar el estado de pago de la orden y asignar caja si existe
+        // Actualizar el estado de pago de la orden y asignar caja
         await prisma.order.update({
             where: { id: data.orderId },
             data: {
                 paymentStatus,
-                // Asignar a la caja actual si existe
-                ...(openShift ? { cashRegisterId: openShift.id } : {}),
+                cashRegisterId: openShift.id,
                 // Si el pago está completo y la orden está servida, marcarla como completada
                 ...(paymentStatus === 'PAID' && order.status === 'SERVED'
                     ? { status: 'COMPLETED', completedAt: new Date() }

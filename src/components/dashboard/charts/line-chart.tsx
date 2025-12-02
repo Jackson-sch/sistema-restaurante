@@ -1,14 +1,14 @@
 "use client"
 
+import * as React from "react"
+import { CartesianGrid, Line, LineChart as RechartsLineChart, XAxis, YAxis } from "recharts"
+
 import {
-  Line,
-  LineChart as RechartsLineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-} from "recharts"
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart"
 
 interface LineChartProps {
   data: Array<{
@@ -20,54 +20,48 @@ interface LineChartProps {
 }
 
 export function LineChart({ data, height = 300, color = "hsl(var(--primary))" }: LineChartProps) {
+  const chartConfig = {
+    value: {
+      label: "Ventas",
+      color: color,
+    },
+  } satisfies ChartConfig
+
   return (
-    <ResponsiveContainer width="100%" height={height}>
-      <RechartsLineChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+    <ChartContainer config={chartConfig} className="min-h-[200px] w-full" style={{ height }}>
+      <RechartsLineChart
+        accessibilityLayer
+        data={data}
+        margin={{
+          left: 12,
+          right: 12,
+        }}
+      >
+        <CartesianGrid vertical={false} />
         <XAxis
           dataKey="name"
-          stroke="hsl(var(--muted-foreground))"
-          fontSize={12}
           tickLine={false}
           axisLine={false}
+          tickMargin={8}
+          tickFormatter={(value) => value.slice(0, 3)}
         />
         <YAxis
-          stroke="hsl(var(--muted-foreground))"
-          fontSize={12}
           tickLine={false}
           axisLine={false}
           tickFormatter={(value) => `S/ ${value}`}
         />
-        <Tooltip
-          content={({ active, payload }) => {
-            if (active && payload && payload.length) {
-              return (
-                <div className="rounded-lg border bg-background p-2 shadow-sm">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="flex flex-col">
-                      <span className="text-[0.70rem] uppercase text-muted-foreground">
-                        {payload[0].payload.name}
-                      </span>
-                      <span className="font-bold text-muted-foreground">
-                        S/ {payload[0].value}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )
-            }
-            return null
-          }}
+        <ChartTooltip
+          cursor={false}
+          content={<ChartTooltipContent hideLabel />}
         />
         <Line
-          type="monotone"
           dataKey="value"
-          stroke={color}
+          type="natural"
+          stroke="var(--color-value)"
           strokeWidth={2}
-          dot={{ fill: color, r: 4 }}
-          activeDot={{ r: 6 }}
+          dot={false}
         />
       </RechartsLineChart>
-    </ResponsiveContainer>
+    </ChartContainer>
   )
 }

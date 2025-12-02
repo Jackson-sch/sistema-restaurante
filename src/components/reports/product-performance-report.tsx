@@ -134,7 +134,6 @@ export function ProductPerformanceReport() {
                 />
                 <Bar
                   dataKey="quantity"
-                  layout="vertical"
                   fill="url(#fillQuantity)"
                   radius={[0, 8, 8, 0]}
                   stroke="hsl(221, 83%, 53%)"
@@ -199,7 +198,6 @@ export function ProductPerformanceReport() {
                 />
                 <Bar
                   dataKey="revenue"
-                  layout="vertical"
                   radius={[0, 8, 8, 0]}
                   animationBegin={100}
                   animationDuration={800}
@@ -221,7 +219,7 @@ export function ProductPerformanceReport() {
                     offset={4}
                     className="fill-foreground font-semibold"
                     fontSize={12}
-                    formatter={(value: number) => `S/ ${value.toFixed(0)}`}
+                    formatter={(value: any) => `S/ ${Number(value).toFixed(0)}`}
                   />
                 </Bar>
               </BarChart>

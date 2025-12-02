@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
-import { startOfDay, endOfDay, differenceInMinutes } from "date-fns"
+import { startOfDay, endOfDay, differenceInMinutes, format, eachDayOfInterval } from "date-fns"
 
 interface DateRange {
   from: Date
@@ -58,6 +58,7 @@ export async function getDashboardStats(dateRange?: DateRange) {
       },
     })
 
+
     // Previous period orders for comparison
     const previousOrders = await prisma.order.findMany({
       where: {
@@ -99,72 +100,69 @@ export async function getDashboardStats(dateRange?: DateRange) {
       }, 0) / completedWithTime.length
       : 0
 
-    // Órdenes activas (always current, not filtered by date)
-    const activeOrders = await prisma.order.count({
-      where: {
-        restaurantId: session.user.restaurantId,
-        status: {
-          in: ["PENDING", "CONFIRMED", "PREPARING", "READY", "SERVED"],
+    // Órdenes activas, mesas, y stock bajo - fetch in parallel (always current, not filtered by date)
+    const [activeOrders, occupiedTables, totalTables, lowStockIngredients] = await Promise.all([
+      prisma.order.count({
+        where: {
+          restaurantId: session.user.restaurantId,
+          status: {
+            in: ["PENDING", "CONFIRMED", "PREPARING", "READY", "SERVED"],
+          },
         },
-      },
-    })
-
-    // Mesas ocupadas (always current)
-    const occupiedTables = await prisma.table.count({
-      where: {
-        restaurantId: session.user.restaurantId,
-        status: "OCCUPIED",
-      },
-    })
-
-    const totalTables = await prisma.table.count({
-      where: {
-        restaurantId: session.user.restaurantId,
-      },
-    })
-
-    // Ingredientes con stock bajo (always current)
-    const lowStockIngredients = await prisma.ingredient.findMany({
-      where: {
-        restaurantId: session.user.restaurantId,
-      },
-      select: {
-        id: true,
-        name: true,
-        currentStock: true,
-        minStock: true,
-        unit: true,
-      },
-    })
+      }),
+      prisma.table.count({
+        where: {
+          restaurantId: session.user.restaurantId,
+          status: "OCCUPIED",
+        },
+      }),
+      prisma.table.count({
+        where: {
+          restaurantId: session.user.restaurantId,
+        },
+      }),
+      prisma.ingredient.findMany({
+        where: {
+          restaurantId: session.user.restaurantId,
+        },
+        select: {
+          id: true,
+          name: true,
+          currentStock: true,
+          minStock: true,
+          unit: true,
+        },
+      }),
+    ])
 
     const lowStock = lowStockIngredients.filter(
       ing => Number(ing.currentStock) <= Number(ing.minStock)
     )
 
-    // Sales by day (for chart)
-    const daysDiff = Math.min(periodDays, 30) // Max 30 days for chart
-    const restaurantId = session.user.restaurantId! // Already validated above
+    // Sales by day
+    const days = eachDayOfInterval({ start: from, end: to })
 
-    const salesByDay = await Promise.all(
-      Array.from({ length: daysDiff }, (_, i) => {
-        const dateTime = to.getTime() - ((daysDiff - 1 - i) * 24 * 60 * 60 * 1000)
-        const date = new Date(dateTime)
-        const start = startOfDay(date)
-        const end = endOfDay(date)
+    // Group current orders by day using local date string
+    const salesByDayMap = new Map<string, number>()
 
-        return prisma.order.findMany({
-          where: {
-            restaurantId,
-            createdAt: { gte: start, lte: end },
-            status: { not: "CANCELLED" },
-          },
-          select: { total: true },
-        }).then(orders => ({
-          date: date.toISOString().split('T')[0],
-          total: orders.reduce((sum, o) => sum + Number(o.total), 0),
-        }))
-      })
-    )
+    // Initialize all days with 0
+    days.forEach(day => {
+      salesByDayMap.set(format(day, 'yyyy-MM-dd'), 0)
+    })
+
+    // Aggregate sales from currentOrders
+    currentOrders.forEach(order => {
+      const dateKey = format(order.createdAt, 'yyyy-MM-dd')
+      if (salesByDayMap.has(dateKey)) {
+        salesByDayMap.set(dateKey, (salesByDayMap.get(dateKey) || 0) + Number(order.total))
+      }
+    })
+
+    // Convert to array
+    const salesByDay = Array.from(salesByDayMap.entries()).map(([date, total]) => ({
+      date,
+      total
+    }))
 
     // Sales by category
     const salesByCategory: Record<string, number> = {}

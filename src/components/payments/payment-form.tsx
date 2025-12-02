@@ -29,7 +29,7 @@ const paymentSchema = z.object({
     method: z.enum(['CASH', 'CARD', 'YAPE', 'PLIN', 'TRANSFER', 'MIXED']),
     amount: z.number().min(0.01, 'El monto debe ser mayor a 0'),
     reference: z.string().optional(),
-    receiptType: z.enum(['BOLETA', 'FACTURA', 'NOTA']).optional(),
+    receiptType: z.enum(['BOLETA', 'FACTURA', 'NOTA_VENTA', 'TICKET']).optional(),
     receiptNumber: z.string().optional(),
     customerDoc: z.string().optional(),
     customerName: z.string().optional(),
@@ -112,14 +112,23 @@ export function PaymentForm() {
     const receiptType = watch('receiptType');
 
     useEffect(() => {
-        if (receiptType && seriesList.length > 0) {
-            const series = seriesList.find(s => s.type === receiptType && s.active);
-            if (series) {
-                const nextNumber = series.currentNumber + 1;
-                const formattedNumber = `${series.series}-${nextNumber.toString().padStart(8, '0')}`;
-                setValue('receiptNumber', formattedNumber);
-            } else {
-                setValue('receiptNumber', '');
+        if (receiptType) {
+            // Manejar autocompletado para TICKET
+            if (receiptType === 'TICKET') {
+                setValue('customerDoc', '00000000');
+                setValue('customerName', 'Publico General');
+            }
+
+            // Manejar serie
+            if (seriesList.length > 0) {
+                const series = seriesList.find(s => s.type === receiptType && s.active);
+                if (series) {
+                    const nextNumber = series.currentNumber + 1;
+                    const formattedNumber = `${series.series}-${nextNumber.toString().padStart(8, '0')}`;
+                    setValue('receiptNumber', formattedNumber);
+                } else {
+                    setValue('receiptNumber', '');
+                }
             }
         }
     }, [receiptType, seriesList, setValue]);
@@ -404,7 +413,7 @@ export function PaymentForm() {
                                             <SelectContent>
                                                 <SelectItem value="BOLETA">Boleta</SelectItem>
                                                 <SelectItem value="FACTURA">Factura</SelectItem>
-                                                <SelectItem value="NOTA">Nota de Venta</SelectItem>
+                                                <SelectItem value="NOTA_VENTA">Nota de Venta</SelectItem>
                                                 <SelectItem value="TICKET">Ticket</SelectItem>
                                             </SelectContent>
                                         </Select>

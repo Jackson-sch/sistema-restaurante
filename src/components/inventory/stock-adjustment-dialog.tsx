@@ -35,9 +35,7 @@ import { toast } from "sonner"
 import { Loader2 } from "lucide-react"
 
 const formSchema = z.object({
-  type: z.enum(["IN", "OUT", "WASTE", "ADJUSTMENT"], {
-    required_error: "Selecciona un tipo de movimiento",
-  }),
+  type: z.enum(["IN", "OUT", "WASTE", "ADJUSTMENT"] as const),
   quantity: z.coerce.number().min(0.001, "La cantidad debe ser mayor a 0"),
   reason: z.string().optional(),
 })

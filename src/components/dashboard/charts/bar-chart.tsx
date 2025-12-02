@@ -1,14 +1,14 @@
 "use client"
 
+import { Bar, BarChart as RechartsBarChart, CartesianGrid, XAxis, YAxis } from "recharts"
+
 import {
-  Bar,
-  BarChart as RechartsBarChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-} from "recharts"
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart"
+import { formatCurrency } from "@/lib/utils"
 
 interface BarChartProps {
   data: Array<{
@@ -19,60 +19,63 @@ interface BarChartProps {
   color?: string
 }
 
-export function BarChart({ data, height = 300, color = "#3b82f6" }: BarChartProps) {
+export function BarChart({ data, height = 300, color = "var(--chart-5)" }: BarChartProps) {
+  const chartConfig = {
+    value: {
+      label: "Ventas",
+      color: color,
+    },
+  } satisfies ChartConfig
+
   return (
-    <ResponsiveContainer width="100%" height={height}>
-      <RechartsBarChart data={data}>
+    <ChartContainer config={chartConfig} className="w-full h-full min-h-[200px]" style={{ height }}>
+      <RechartsBarChart accessibilityLayer data={data}>
         <defs>
-          <linearGradient id="colorBar" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.9} />
-            <stop offset="100%" stopColor="#1d4ed8" stopOpacity={0.7} />
+          <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity={0.8} />
+            <stop offset="100%" stopColor={color} stopOpacity={0.2} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.3} />
+        <CartesianGrid vertical={false} />
         <XAxis
           dataKey="name"
-          stroke="#6b7280"
-          fontSize={12}
           tickLine={false}
+          tickMargin={10}
           axisLine={false}
+          tickFormatter={(value) => value.slice(0, 3)}
         />
         <YAxis
-          stroke="#6b7280"
-          fontSize={12}
           tickLine={false}
           axisLine={false}
           tickFormatter={(value) => `S/ ${value}`}
         />
-        <Tooltip
-          cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }}
+        <ChartTooltip
           content={({ active, payload }) => {
-            if (active && payload && payload.length) {
-              return (
-                <div className="rounded-lg border bg-background p-3 shadow-lg">
-                  <div className="grid gap-2">
-                    <div className="flex flex-col">
-                      <span className="text-xs font-medium uppercase text-muted-foreground">
-                        {payload[0].payload.name}
-                      </span>
-                      <span className="text-lg font-bold text-blue-600">
-                        S/ {Number(payload[0].value).toFixed(2)}
-                      </span>
-                    </div>
+            if (!active || !payload || !payload.length) return null
+
+            return (
+              <div className="rounded-lg border bg-background p-2 shadow-sm">
+                <div className="grid gap-2">
+                  <div className="flex flex-col">
+                    <span className="text-[0.70rem] uppercase text-muted-foreground">
+                      {payload[0].payload.name}
+                    </span>
+                    <span className="font-bold text-muted-foreground">
+                      {formatCurrency(payload[0].value as number)}
+                    </span>
                   </div>
                 </div>
-              )
-            }
-            return null
+              </div>
+            )
           }}
         />
         <Bar
           dataKey="value"
-          fill="url(#colorBar)"
+          fill="url(#barGradient)"
           radius={[8, 8, 0, 0]}
-          maxBarSize={60}
+          animationDuration={1500}
         />
       </RechartsBarChart>
-    </ResponsiveContainer>
+    </ChartContainer>
   )
 }

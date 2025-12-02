@@ -54,7 +54,7 @@ export function StaffDialog({ open, onOpenChange, staff, onSuccess }: StaffDialo
     const [loading, setLoading] = React.useState(false);
     const isEditing = !!staff;
 
-    const form = useForm<StaffInput>({
+    const form = useForm({
         resolver: zodResolver(staffSchema),
         defaultValues: {
             name: staff?.name || '',

@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
 import { format } from "date-fns"
+import { formatCurrency } from "@/lib/utils"
 
 interface PageProps {
   searchParams: Promise<{
@@ -20,8 +21,20 @@ interface PageProps {
 
 export default async function DashboardPage({ searchParams }: PageProps) {
   const params = await searchParams
-  const from = params.from ? new Date(params.from) : undefined
-  const to = params.to ? new Date(params.to) : undefined
+
+  // Parse dates as local timezone (not UTC)
+  const parseLocalDate = (dateStr: string) => {
+    // dateStr format: "2025-11-27T00:00:00.000"
+    const [datePart, timePart] = dateStr.split('T')
+    const [year, month, day] = datePart.split('-').map(Number)
+    const [time, ms] = timePart.split('.')
+    const [hours, minutes, seconds] = time.split(':').map(Number)
+
+    return new Date(year, month - 1, day, hours, minutes, seconds, Number(ms))
+  }
+
+  const from = params.from ? parseLocalDate(params.from) : undefined
+  const to = params.to ? parseLocalDate(params.to) : undefined
 
   const dateRange = from && to ? { from, to } : undefined
   const result = await getDashboardStats(dateRange)
@@ -52,7 +65,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
 
   // Prepare chart data
   const salesChartData = stats.salesByDay.map(day => ({
-    name: format(new Date(day.date), "dd MMM", { locale: es }),
+    name: format(new Date(day.date + 'T00:00:00'), "dd MMM", { locale: es }),
     value: day.total,
   }))
 
@@ -72,10 +85,10 @@ export default async function DashboardPage({ searchParams }: PageProps) {
       <AlertsPanel alerts={stats.alerts || []} />
 
       {/* Main Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      < div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4" >
         <StatCard
           title="Ventas Totales"
-          value={`S/ ${stats.sales.current.toFixed(2)}`}
+          value={formatCurrency(stats.sales.current)}
           description={`${stats.orders.current} órdenes`}
           icon={DollarSign}
           comparison={stats.sales.change}
@@ -84,7 +97,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         />
         <StatCard
           title="Ticket Promedio"
-          value={`S/ ${stats.averageTicket.current.toFixed(2)}`}
+          value={formatCurrency(stats.averageTicket.current)}
           description="Por orden completada"
           icon={TrendingUp}
           comparison={stats.averageTicket.change}
@@ -107,10 +120,10 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           iconColor="text-orange-600"
           iconBgColor="bg-orange-100 dark:bg-orange-900/30"
         />
-      </div>
+      </div >
 
       {/* Secondary Stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      < div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3" >
         <StatCard
           title="Mesas Ocupadas"
           value={`${stats.occupiedTables}/${stats.totalTables}`}
@@ -137,11 +150,11 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           iconColor="text-indigo-600"
           iconBgColor="bg-indigo-100 dark:bg-indigo-900/30"
         />
-      </div>
+      </div >
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
         {/* Sales Chart */}
-        <Card className="col-span-4">
+        <Card className="lg:col-span-4">
           <CardHeader>
             <CardTitle>Tendencia de Ventas</CardTitle>
             <CardDescription>
@@ -154,7 +167,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         </Card>
 
         {/* Sales by Category */}
-        <Card className="col-span-3">
+        <Card className="lg:col-span-3">
           <CardHeader>
             <CardTitle>Ventas por Categoría</CardTitle>
             <CardDescription>
@@ -163,7 +176,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           </CardHeader>
           <CardContent>
             {stats.salesByCategory.length > 0 ? (
-              <DonutChart data={stats.salesByCategory} height={250} />
+              <DonutChart data={stats.salesByCategory} height={300} />
             ) : (
               <div className="flex items-center justify-center h-[250px] text-muted-foreground">
                 No hay datos
@@ -198,7 +211,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                     </p>
                   </div>
                   <div className="text-sm font-medium">
-                    S/ {product.revenue.toFixed(2)}
+                    {formatCurrency(product.revenue)}
                   </div>
                 </div>
               ))}
@@ -276,8 +289,10 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right">
-                    <p className="text-sm font-medium">S/ {order.total.toFixed(2)}</p>
-                    <p className="text-xs text-muted-foreground capitalize">{order.type.toLowerCase().replace('_', ' ')}</p>
+                    <p className="text-sm font-medium">{formatCurrency(order.total)}</p>
+                    <p className="text-sm text-muted-foreground">{
+                      order.type === 'DINE_IN' ? 'Mesa' : order.type === 'TAKEOUT' ? 'Para llevar' : 'Delivery'
+                    }</p>
                   </div>
                   {getStatusBadge(order.status)}
                 </div>
@@ -291,6 +306,6 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </div >
   )
 }

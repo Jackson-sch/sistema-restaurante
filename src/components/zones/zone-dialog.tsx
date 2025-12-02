@@ -42,7 +42,7 @@ export function ZoneDialog({ zone, trigger, open: controlledOpen, onOpenChange }
         reset,
         formState: { errors },
         setValue,
-    } = useForm<ZoneInput>({
+    } = useForm({
         resolver: zodResolver(zoneSchema),
         defaultValues: {
             name: "",

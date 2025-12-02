@@ -28,9 +28,10 @@ import {
 
 interface TransactionDialogProps {
     cashRegisterId: string
+    trigger?: React.ReactNode
 }
 
-export function TransactionDialog({ cashRegisterId }: TransactionDialogProps) {
+export function TransactionDialog({ cashRegisterId, trigger }: TransactionDialogProps) {
     const [open, setOpen] = useState(false)
     const [isPending, startTransition] = useTransition()
 
@@ -66,7 +67,7 @@ export function TransactionDialog({ cashRegisterId }: TransactionDialogProps) {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="outline">Registrar Movimiento</Button>
+                {trigger || <Button variant="outline">Registrar Movimiento</Button>}
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>

@@ -86,6 +86,7 @@ export async function updateTableStatus(id: string, status: "AVAILABLE" | "OCCUP
             data: { status }
         })
         revalidatePath("/dashboard/tables")
+        revalidatePath("/dashboard/tables/map")
         return { success: true }
     } catch (error) {
         return { success: false, error: "Error al actualizar estado de la mesa" }
@@ -168,5 +169,53 @@ export async function deleteTable(id: string) {
             return { success: false, error: error.message }
         }
         return { success: false, error: 'Error al eliminar la mesa' };
+    }
+}
+
+export async function getTablesWithOccupationTime() {
+    try {
+        const restaurantId = await getRestaurantId()
+
+        const rawTables = await prisma.table.findMany({
+            where: { restaurantId },
+            orderBy: { number: "asc" },
+            include: {
+                zone: true,
+                orders: {
+                    where: {
+                        status: {
+                            notIn: ['COMPLETED', 'CANCELLED']
+                        }
+                    },
+                    include: {
+                        user: {
+                            select: {
+                                name: true,
+                                email: true
+                            }
+                        }
+                    },
+                    orderBy: { createdAt: 'asc' }
+                }
+            }
+        })
+
+        // Transform Decimal fields to numbers for client component serialization
+        const tables = rawTables.map(table => ({
+            ...table,
+            orders: table.orders.map(order => ({
+                ...order,
+                subtotal: Number(order.subtotal),
+                tax: Number(order.tax),
+                discount: Number(order.discount || 0),
+                tip: Number(order.tip || 0),
+                total: Number(order.total),
+            }))
+        }))
+
+        return { success: true, data: tables }
+    } catch (error) {
+        console.error("Error fetching tables with occupation time:", error)
+        return { success: false, error: "Error al obtener mesas" }
     }
 }

@@ -1,7 +1,21 @@
 import { PrismaClient } from "../../prisma/generated/client/client"
+import { PrismaPg } from "@prisma/adapter-pg"
+import pg from "pg"
 
-const globalForPrisma = globalThis as unknown as { prisma: PrismaClient }
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient
+  pool: pg.Pool
+}
 
-export const prisma = globalForPrisma.prisma || new PrismaClient()
+// Create pool once and reuse
+if (!globalForPrisma.pool) {
+  globalForPrisma.pool = new pg.Pool({
+    connectionString: process.env.DATABASE_URL
+  })
+}
+
+const adapter = new PrismaPg(globalForPrisma.pool)
+
+export const prisma = globalForPrisma.prisma || new PrismaClient({ adapter })
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma

@@ -1,5 +1,6 @@
 import { AlertCircle, AlertTriangle, Info, Clock, Package, DollarSign } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { PulseIndicator } from "./pulse-indicator"
 
 export type AlertType = "critical" | "warning" | "info"
 
@@ -51,12 +52,13 @@ export function AlertItem({ alert, onDismiss }: AlertItemProps) {
   return (
     <div
       className={cn(
-        "flex gap-3 p-4 rounded-lg border",
+        "flex gap-3 p-4 rounded-lg border transition-all hover:shadow-md",
         config.bgColor,
         config.borderColor
       )}
     >
-      <div className={cn("flex-shrink-0 mt-0.5", config.iconColor)}>
+      <div className={cn("shrink-0 mt-0.5 flex items-center gap-2", config.iconColor)}>
+        {alert.type === "critical" && <PulseIndicator variant="critical" size="sm" />}
         <Icon className="h-5 w-5" />
       </div>
       <div className="flex-1 min-w-0">
@@ -70,7 +72,7 @@ export function AlertItem({ alert, onDismiss }: AlertItemProps) {
           <a
             href={alert.action.href}
             className={cn(
-              "text-sm font-medium mt-2 inline-block hover:underline",
+              "text-sm font-medium mt-2 inline-block hover:underline transition-all",
               config.iconColor
             )}
           >
@@ -82,7 +84,7 @@ export function AlertItem({ alert, onDismiss }: AlertItemProps) {
         <button
           onClick={() => onDismiss(alert.id)}
           className={cn(
-            "flex-shrink-0 text-sm font-medium hover:opacity-70",
+            "shrink-0 text-sm font-medium hover:opacity-70 transition-opacity",
             config.textColor
           )}
         >

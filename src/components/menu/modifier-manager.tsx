@@ -52,12 +52,12 @@ export function ModifierManager({ productId, modifierGroups, onRefresh }: Modifi
     const [isPending, startTransition] = useTransition();
 
     // Forms
-    const groupForm = useForm<ModifierGroupInput>({
+    const groupForm = useForm({
         resolver: zodResolver(modifierGroupSchema),
         defaultValues: { name: "", required: false, multiSelect: true, minSelect: 0, maxSelect: undefined },
     });
 
-    const modifierForm = useForm<ModifierInput>({
+    const modifierForm = useForm({
         resolver: zodResolver(modifierSchema),
         defaultValues: { modifierGroupId: "", name: "", price: 0, available: true },
     });

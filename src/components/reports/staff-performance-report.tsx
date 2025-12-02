@@ -111,7 +111,6 @@ export function StaffPerformanceReport() {
                 />
                 <Bar
                   dataKey="totalSales"
-                  layout="vertical"
                   fill="var(--chart-1)"
                   radius={[0, 8, 8, 0]}
                   animationBegin={0}
@@ -125,7 +124,7 @@ export function StaffPerformanceReport() {
                     offset={8}
                     className="fill-foreground font-semibold"
                     fontSize={12}
-                    formatter={(value: number) => `S/ ${value.toFixed(0)}`}
+                    formatter={(value: any) => `S/ ${Number(value).toFixed(0)}`}
                   />
                 </Bar>
               </BarChart>
@@ -167,7 +166,6 @@ export function StaffPerformanceReport() {
                 />
                 <Bar
                   dataKey="totalCollected"
-                  layout="vertical"
                   fill="var(--chart-2)"
                   radius={[0, 8, 8, 0]}
                   animationBegin={100}
@@ -181,7 +179,7 @@ export function StaffPerformanceReport() {
                     offset={8}
                     className="fill-foreground font-semibold"
                     fontSize={12}
-                    formatter={(value: number) => `S/ ${value.toFixed(0)}`}
+                    formatter={(value: any) => `S/ ${Number(value).toFixed(0)}`}
                   />
                 </Bar>
               </BarChart>

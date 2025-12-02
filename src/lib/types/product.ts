@@ -7,7 +7,11 @@ export type ProductWithRelations = Prisma.ProductGetPayload<{
         variants: true
         modifierGroups: {
             include: {
-                modifiers: true
+                modifierGroup: {
+                    include: {
+                        modifiers: true
+                    }
+                }
             }
         }
     }

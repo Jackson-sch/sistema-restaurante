@@ -14,7 +14,10 @@ import {
     Search,
     ShoppingBag,
     Menu,
-    Layers
+    Layers,
+    HandPlatter,
+    UtensilsCrossedIcon,
+    Croissant,
 } from "lucide-react"
 import { ProductGrid } from "./product-grid"
 import { OrderCart } from "./order-cart"
@@ -56,6 +59,9 @@ const getCategoryIcon = (name: string) => {
         return UtensilsCrossed
     if (normalized.includes("postre") || normalized.includes("dessert") || normalized.includes("helado")) return IceCream
     if (normalized.includes("alcohol") || normalized.includes("beer") || normalized.includes("cerveza")) return Beer
+    if (normalized.includes("entrada") || normalized.includes("entrada") || normalized.includes("entrada")) return HandPlatter
+    if (normalized.includes("platos") || normalized.includes("platos") || normalized.includes("platos")) return UtensilsCrossedIcon
+    if (normalized.includes("extras") || normalized.includes("extras") || normalized.includes("extras")) return Croissant
     return LayoutGrid
 }
 
@@ -64,6 +70,7 @@ export function OrderInterface({ categories, products, tables, onOrderCreated, o
     const [searchQuery, setSearchQuery] = useState("")
     const [cart, setCart] = useState<CartItem[]>([])
     const [selectedTable, setSelectedTable] = useState<TableData | null>(null)
+    const [isMobileCartOpen, setIsMobileCartOpen] = useState(false)
 
     const filteredProducts = products.filter((p) => {
         const matchesCategory = selectedCategory === "all" || p.categoryId === selectedCategory
@@ -139,23 +146,23 @@ export function OrderInterface({ categories, products, tables, onOrderCreated, o
     return (
         <div className="flex h-screen w-full bg-background overflow-hidden font-sans">
             {/* Left Side: Sidebar Navigation */}
-            <aside className="w-20 lg:w-24 border-r flex flex-col items-center py-6 bg-card z-30">
-                <div className="mb-8 p-2 rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
-                    <Layers className="h-6 w-6" />
+            <aside className="w-16 md:w-20 lg:w-24 border-r flex flex-col items-center py-4 md:py-6 bg-card z-30">
+                <div className="mb-6 md:mb-8 p-1.5 md:p-2 rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
+                    <Layers className="h-5 w-5 md:h-6 md:w-6" />
                 </div>
 
-                <nav className="flex-1 flex flex-col gap-4 w-full px-2">
+                <nav className="flex-1 flex flex-col gap-2 md:gap-4 w-full px-1 md:px-2">
                     <button
                         onClick={() => setSelectedCategory("all")}
                         className={cn(
-                            "group flex flex-col items-center justify-center gap-1 p-3 rounded-2xl transition-all duration-200",
+                            "group flex flex-col items-center justify-center gap-0.5 md:gap-1 p-2 md:p-3 rounded-xl md:rounded-2xl transition-all duration-200",
                             selectedCategory === "all"
                                 ? "bg-primary/10 text-primary"
                                 : "text-muted-foreground hover:bg-muted hover:text-foreground",
                         )}
                     >
-                        <LayoutGrid className="h-6 w-6" />
-                        <span className="text-[10px] font-medium">Todos</span>
+                        <LayoutGrid className="h-5 w-5 md:h-6 md:w-6" />
+                        <span className="text-[9px] md:text-[10px] font-medium">Todos</span>
                     </button>
 
                     {categories.map((cat) => {
@@ -165,37 +172,37 @@ export function OrderInterface({ categories, products, tables, onOrderCreated, o
                                 key={cat.id}
                                 onClick={() => setSelectedCategory(cat.id)}
                                 className={cn(
-                                    "group flex flex-col items-center justify-center gap-1 p-3 rounded-2xl transition-all duration-200",
+                                    "group flex flex-col items-center justify-center gap-0.5 md:gap-1 p-2 md:p-3 rounded-xl md:rounded-2xl transition-all duration-200",
                                     selectedCategory === cat.id
                                         ? "bg-primary/10 text-primary"
                                         : "text-muted-foreground hover:bg-muted hover:text-foreground",
                                 )}
                             >
-                                <Icon className="h-6 w-6" />
-                                <span className="text-[10px] font-medium truncate w-full text-center">{cat.name.slice(0, 8)}</span>
+                                <Icon className="h-5 w-5 md:h-6 md:w-6" />
+                                <span className="text-[9px] md:text-[10px] font-medium truncate w-full text-center">{cat.name.slice(0, 6)}</span>
                             </button>
                         )
                     })}
                 </nav>
 
                 <div className="mt-auto">
-                    <button className="p-3 rounded-2xl text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
-                        <Menu className="h-6 w-6" />
+                    <button className="p-2 md:p-3 rounded-xl md:rounded-2xl text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
+                        <Menu className="h-5 w-5 md:h-6 md:w-6" />
                     </button>
                 </div>
             </aside>
 
             {/* Middle: Product Grid */}
-            <main className="flex-1 flex flex-col bg-muted/10 h-full overflow-hidden relative">
+            <main className="flex-1 flex flex-col bg-muted/10 h-full overflow-hidden relative min-w-0">
                 {/* Header with Search */}
-                <header className="h-20 px-8 flex items-center justify-between bg-background/50 backdrop-blur-md sticky top-0 z-10">
-                    <div>
-                        <h1 className="text-2xl font-bold tracking-tight">
+                <header className="h-16 md:h-20 px-4 md:px-8 flex items-center justify-between bg-background/50 backdrop-blur-md sticky top-0 z-10">
+                    <div className="min-w-0 flex-1">
+                        <h1 className="text-lg md:text-2xl font-bold tracking-tight truncate">
                             {selectedCategory === "all"
                                 ? "Todos los productos"
                                 : categories.find((c) => c.id === selectedCategory)?.name || "Menú"}
                         </h1>
-                        <p className="text-sm text-muted-foreground">{filteredProducts.length} productos disponibles</p>
+                        <p className="text-xs md:text-sm text-muted-foreground">{filteredProducts.length} productos</p>
                     </div>
 
                     <div className="relative w-96 hidden md:block">
@@ -210,7 +217,7 @@ export function OrderInterface({ categories, products, tables, onOrderCreated, o
                 </header>
 
                 {/* Grid Content */}
-                <div className="flex-1 overflow-hidden p-6 pt-2">
+                <div className="flex-1 overflow-hidden p-3 md:p-6 pt-2">
                     <ScrollArea className="h-full pr-4 -mr-4">
                         <div className="pb-20">
                             <ProductGrid products={filteredProducts} onAddToCart={addToCart} />
@@ -219,8 +226,8 @@ export function OrderInterface({ categories, products, tables, onOrderCreated, o
                 </div>
             </main>
 
-            {/* Right Side: Cart */}
-            <aside className="w-[400px] xl:w-[450px] bg-background border-l shadow-xl shadow-black/5 z-20 flex flex-col h-full">
+            {/* Right Side: Cart - Hidden on mobile, overlay on tablet/desktop */}
+            <aside className="hidden md:flex md:w-[400px] xl:w-[450px] bg-background border-l shadow-xl shadow-black/5 z-20 flex-col h-full">
                 <OrderCart
                     items={cart}
                     onRemove={removeFromCart}
@@ -233,6 +240,47 @@ export function OrderInterface({ categories, products, tables, onOrderCreated, o
                     onTableChange={setSelectedTable}
                 />
             </aside>
+
+            {/* Mobile Cart: Floating Button */}
+            <button
+                onClick={() => setIsMobileCartOpen(true)}
+                className="md:hidden fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:scale-110 transition-transform flex items-center justify-center"
+            >
+                <div className="relative">
+                    <ShoppingBag className="h-6 w-6" />
+                    {cart.length > 0 && (
+                        <span className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs font-bold flex items-center justify-center">
+                            {cart.length}
+                        </span>
+                    )}
+                </div>
+            </button>
+
+            {/* Mobile Cart: Sheet Drawer */}
+            {isMobileCartOpen && (
+                <div className="md:hidden fixed inset-0 z-50 bg-background/80 backdrop-blur-sm" onClick={() => setIsMobileCartOpen(false)}>
+                    <div
+                        className="fixed inset-y-0 right-0 w-full max-w-sm bg-background shadow-xl animate-in slide-in-from-right duration-300 h-full"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <OrderCart
+                            items={cart}
+                            onRemove={removeFromCart}
+                            onUpdateQuantity={updateQuantity}
+                            onClear={clearCart}
+                            onOrderCreated={() => {
+                                onOrderCreated?.()
+                                setIsMobileCartOpen(false)
+                            }}
+                            onRefreshTables={onRefreshTables}
+                            tables={tables}
+                            selectedTable={selectedTable}
+                            onTableChange={setSelectedTable}
+                            onClose={() => setIsMobileCartOpen(false)}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
