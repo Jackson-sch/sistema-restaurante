@@ -23,6 +23,8 @@ import { ProductGrid } from "./product-grid"
 import { OrderCart } from "./order-cart"
 import type { CartItem } from "@/types/order"
 import type { TableData } from "./table-selector"
+import { OrderTypeSelector, type OrderType } from "./order-type-selector"
+import { CustomerInfoForm, type CustomerInfo } from "./customer-info-form"
 
 export type ProductWithRelations = Product & {
     variants: ProductVariant[]
@@ -71,6 +73,15 @@ export function OrderInterface({ categories, products, tables, preselectedTable,
     const [searchQuery, setSearchQuery] = useState("")
     const [cart, setCart] = useState<CartItem[]>([])
     const [isMobileCartOpen, setIsMobileCartOpen] = useState(false)
+
+    // Order type and customer info state
+    const [orderType, setOrderType] = useState<OrderType>('DINE_IN')
+    const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
+        name: '',
+        phone: '',
+        email: '',
+        deliveryAddress: ''
+    })
 
     // Initialize selectedTable with preselectedTable if provided
     const [selectedTable, setSelectedTable] = useState<TableData | null>(() => {
@@ -256,6 +267,10 @@ export function OrderInterface({ categories, products, tables, preselectedTable,
                     tables={tables}
                     selectedTable={selectedTable}
                     onTableChange={setSelectedTable}
+                    orderType={orderType}
+                    customerInfo={customerInfo}
+                    onOrderTypeChange={setOrderType}
+                    onCustomerInfoChange={setCustomerInfo}
                 />
             </aside>
 
@@ -296,6 +311,10 @@ export function OrderInterface({ categories, products, tables, preselectedTable,
                             selectedTable={selectedTable}
                             onTableChange={setSelectedTable}
                             onClose={() => setIsMobileCartOpen(false)}
+                            orderType={orderType}
+                            customerInfo={customerInfo}
+                            onOrderTypeChange={setOrderType}
+                            onCustomerInfoChange={setCustomerInfo}
                         />
                     </div>
                 </div>

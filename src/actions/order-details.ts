@@ -64,14 +64,24 @@ export async function getOrderDetails(orderId: string) {
             subtotal: Number(order.subtotal),
             discount: order.discount ? Number(order.discount) : 0,
             tax: order.tax ? Number(order.tax) : 0,
+            tip: order.tip ? Number(order.tip) : 0,
             total: Number(order.total),
             items: order.items.map((item: any) => ({
                 ...item,
-                price: Number(item.price),
+                unitPrice: Number(item.unitPrice),
                 subtotal: Number(item.subtotal),
+                product: {
+                    ...item.product,
+                    price: Number(item.product.price),
+                    cost: item.product.cost ? Number(item.product.cost) : null,
+                },
                 modifiers: item.modifiers.map((mod: any) => ({
                     ...mod,
-                    price: Number(mod.price)
+                    price: Number(mod.price),
+                    modifier: {
+                        ...mod.modifier,
+                        price: Number(mod.modifier.price),
+                    }
                 }))
             })),
             payments: order.payments.map((payment: any) => ({
@@ -129,14 +139,24 @@ export async function getTableOrders(tableId: string) {
             subtotal: Number(order.subtotal),
             discount: order.discount ? Number(order.discount) : 0,
             tax: order.tax ? Number(order.tax) : 0,
+            tip: order.tip ? Number(order.tip) : 0,
             total: Number(order.total),
             items: order.items.map((item: any) => ({
                 ...item,
-                price: Number(item.price),
+                unitPrice: Number(item.unitPrice),
                 subtotal: Number(item.subtotal),
+                product: {
+                    ...item.product,
+                    price: Number(item.product.price),
+                    cost: item.product.cost ? Number(item.product.cost) : null,
+                },
                 modifiers: item.modifiers.map((mod: any) => ({
                     ...mod,
-                    price: Number(mod.price)
+                    price: Number(mod.price),
+                    modifier: {
+                        ...mod.modifier,
+                        price: Number(mod.modifier.price),
+                    }
                 }))
             })),
             payments: order.payments.map((payment: any) => ({
@@ -189,15 +209,36 @@ export async function processQuickPayment(
             }
         }
 
-        // Get order to verify it exists and belongs to restaurant
-        const order = await prisma.order.findUnique({
+        // Get order with complete data for receipt
+        const orderWithDetails = await prisma.order.findUnique({
             where: {
                 id: orderId,
                 restaurantId: session.user.restaurantId
+            },
+            include: {
+                items: {
+                    include: {
+                        product: true
+                    }
+                },
+                table: {
+                    include: {
+                        zone: true
+                    }
+                },
+                restaurant: {
+                    select: {
+                        name: true,
+                        ruc: true,
+                        address: true,
+                        phone: true,
+                        logo: true
+                    }
+                }
             }
         })
 
-        if (!order) {
+        if (!orderWithDetails) {
             return { success: false, error: "Orden no encontrada" }
         }
 
@@ -259,10 +300,10 @@ export async function processQuickPayment(
         })
 
         // Update table status to AVAILABLE if no more active orders
-        if (order.tableId) {
+        if (orderWithDetails.tableId) {
             const activeOrders = await prisma.order.count({
                 where: {
-                    tableId: order.tableId,
+                    tableId: orderWithDetails.tableId,
                     status: {
                         in: ["PENDING", "IN_PROGRESS", "READY", "SERVED"]
                     }
@@ -271,11 +312,12 @@ export async function processQuickPayment(
 
             if (activeOrders === 0) {
                 await prisma.table.update({
-                    where: { id: order.tableId },
+                    where: { id: orderWithDetails.tableId },
                     data: { status: "AVAILABLE" }
                 })
             }
         }
+
 
         revalidatePath("/dashboard/tables")
         revalidatePath("/dashboard/orders")
@@ -283,8 +325,10 @@ export async function processQuickPayment(
         return {
             success: true,
             data: {
-                ...payment,
-                amount: Number(payment.amount)
+                payment: {
+                    id: payment.id,
+                    amount: Number(payment.amount)
+                }
             }
         }
     } catch (error) {

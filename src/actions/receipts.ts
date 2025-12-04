@@ -54,7 +54,7 @@ export async function getReceiptData(paymentId: string): Promise<ReceiptData | n
         const restaurant = order.restaurant;
 
         // Determine receipt type
-        let receiptType = ReceiptType.TICKET;
+        let receiptType = ReceiptType.NOTA_VENTA;
         if (payment.receiptType) {
             receiptType = payment.receiptType as ReceiptType;
         }

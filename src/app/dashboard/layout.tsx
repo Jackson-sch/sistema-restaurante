@@ -33,11 +33,15 @@ export default async function DashboardLayout({
 
     return (
         <>
-            <Navbar />
+            <div className="print:hidden">
+                <Navbar />
+            </div>
             <SidebarProvider>
-                <AppSidebar user={session?.user} restaurant={restaurant} />
+                <div className="print:hidden">
+                    <AppSidebar user={session?.user} restaurant={restaurant} />
+                </div>
                 <SidebarInset>
-                    <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+                    <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 print:hidden">
                         <div className="flex items-center gap-2 px-4">
                             <SidebarTrigger className="-ml-1" />
                             <Separator
@@ -57,7 +61,7 @@ export default async function DashboardLayout({
                             </Breadcrumb>
                         </div>
                     </header>
-                    <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+                    <div className="flex flex-1 flex-col gap-4 p-6 pt-0 print:p-0">
                         {children}
                     </div>
                 </SidebarInset>

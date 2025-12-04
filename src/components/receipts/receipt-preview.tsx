@@ -22,6 +22,14 @@ export function ReceiptPreview({ open, onOpenChange, data }: ReceiptPreviewProps
     const [printStatus, setPrintStatus] = useState<PrintStatus>("idle")
     const [zoom, setZoom] = useState(1)
 
+    // Debug logging
+    useEffect(() => {
+        console.log("ReceiptPreview props changed:", { open, hasData: !!data, dataType: data?.type })
+        if (data) {
+            console.log("Receipt data in ReceiptPreview:", data)
+        }
+    }, [open, data])
+
     useEffect(() => {
         if (open) {
             setZoom(1)
@@ -193,7 +201,7 @@ export function ReceiptPreview({ open, onOpenChange, data }: ReceiptPreviewProps
         switch (type) {
             case "FACTURA": return "bg-blue-500/10 text-blue-600 ring-blue-500/20"
             case "BOLETA": return "bg-emerald-500/10 text-emerald-600 ring-emerald-500/20"
-            case "TICKET": return "bg-amber-500/10 text-amber-600 ring-amber-500/20"
+            case "NOTA_VENTA": return "bg-amber-500/10 text-amber-600 ring-amber-500/20"
             default: return "bg-zinc-500/10 text-zinc-600 ring-zinc-500/20"
         }
     }

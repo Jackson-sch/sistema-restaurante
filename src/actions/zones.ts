@@ -87,12 +87,57 @@ export async function deleteZone(id: string) {
     try {
         await requirePermission(PERMISSIONS.ZONES_DELETE)
 
+        // Check if zone has tables and if any have active orders
+        const zone = await prisma.zone.findUnique({
+            where: {
+                id,
+                restaurantId: session.user.restaurantId
+            },
+            include: {
+                tables: {
+                    include: {
+                        orders: {
+                            where: {
+                                status: {
+                                    notIn: ['COMPLETED', 'CANCELLED']
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        })
+
+        if (!zone) {
+            return { success: false, error: "Zona no encontrada" }
+        }
+
+        // Validate if zone has tables
+        if (zone.tables.length > 0) {
+            // Check if any table has active orders
+            const tablesWithOrders = zone.tables.filter(t => t.orders.length > 0)
+
+            if (tablesWithOrders.length > 0) {
+                return {
+                    success: false,
+                    error: `No se puede eliminar. ${tablesWithOrders.length} mesa(s) tienen órdenes activas`
+                }
+            }
+
+            return {
+                success: false,
+                error: `No se puede eliminar. La zona tiene ${zone.tables.length} mesa(s) asociada(s). Elimina o reasigna las mesas primero.`
+            }
+        }
+
+        // If no tables, safe to delete
         await prisma.zone.delete({
             where: {
                 id,
                 restaurantId: session.user.restaurantId
             }
         })
+
         revalidatePath("/dashboard/zones")
         revalidatePath("/dashboard/tables")
         return { success: true }

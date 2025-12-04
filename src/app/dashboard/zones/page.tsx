@@ -1,9 +1,6 @@
-import { getZones, deleteZone } from "@/actions/zones"
+import { getZones } from "@/actions/zones"
 import { ZoneDialog } from "@/components/zones/zone-dialog"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Pencil, Trash2 } from "lucide-react"
-import { ZoneCard } from "@/components/zones/zone-card"
+import { ZonesClient } from "@/components/zones/zones-client"
 
 export default async function ZonesPage() {
     const { data: zones } = await getZones()
@@ -20,16 +17,7 @@ export default async function ZonesPage() {
                 <ZoneDialog />
             </div>
 
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {zones?.map((zone) => (
-                    <ZoneCard key={zone.id} zone={zone} />
-                ))}
-                {(!zones || zones.length === 0) && (
-                    <div className="col-span-full text-center py-12 text-muted-foreground">
-                        No hay zonas registradas. Comienza creando una.
-                    </div>
-                )}
-            </div>
+            <ZonesClient initialZones={zones || []} />
         </div>
     )
 }

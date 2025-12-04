@@ -59,7 +59,7 @@ export async function getOrders({
             ? { table: { number: sortOrder } }
             : { [sortBy]: sortOrder };
 
-    const [data, total] = await Promise.all([
+    const [rawData, total] = await Promise.all([
         prisma.order.findMany({
             where,
             skip,
@@ -77,6 +77,26 @@ export async function getOrders({
         }),
         prisma.order.count({ where }),
     ]);
+
+    // Transform Decimal fields to numbers for client component serialization
+    const data = rawData.map(order => ({
+        ...order,
+        subtotal: Number(order.subtotal),
+        tax: Number(order.tax),
+        discount: Number(order.discount || 0),
+        tip: Number(order.tip || 0),
+        total: Number(order.total),
+        items: order.items.map(item => ({
+            ...item,
+            unitPrice: Number(item.unitPrice),
+            subtotal: Number(item.subtotal),
+            product: {
+                ...item.product,
+                price: Number(item.product.price),
+                cost: Number(item.product.cost || 0),
+            }
+        }))
+    }));
 
     const totalPages = Math.ceil(total / limit);
 
@@ -108,6 +128,11 @@ export async function createOrder(data: {
     subtotal: number;
     tax: number;
     tableId?: string;
+    type?: 'DINE_IN' | 'TAKEOUT' | 'DELIVERY';
+    customerName?: string;
+    customerPhone?: string;
+    customerEmail?: string;
+    deliveryAddress?: string;
 }) {
     const session = await auth();
 
@@ -137,6 +162,21 @@ export async function createOrder(data: {
             }
         }
 
+        // Validate based on order type
+        const orderType = data.type || 'DINE_IN';
+
+        if (orderType === 'DINE_IN' && !data.tableId) {
+            return { success: false, error: 'Se requiere una mesa para órdenes DINE_IN' };
+        }
+
+        if ((orderType === 'TAKEOUT' || orderType === 'DELIVERY') && !data.customerName) {
+            return { success: false, error: 'Se requiere nombre del cliente para órdenes TAKEOUT/DELIVERY' };
+        }
+
+        if (orderType === 'DELIVERY' && !data.deliveryAddress) {
+            return { success: false, error: 'Se requiere dirección de entrega para órdenes DELIVERY' };
+        }
+
         // Generate Order Number (Simple counter for now, could be improved)
         const count = await prisma.order.count({
             where: { restaurantId: session.user.restaurantId },
@@ -151,12 +191,16 @@ export async function createOrder(data: {
                 paymentCode,
                 status: 'PENDING',
                 paymentStatus: 'PENDING',
-                type: 'DINE_IN', // Default for now, could be passed in
+                type: orderType,
                 subtotal: data.subtotal,
                 tax: data.tax,
                 total: data.total,
                 userId: session.user.id,
                 tableId: data.tableId,
+                customerName: data.customerName,
+                customerPhone: data.customerPhone,
+                customerEmail: data.customerEmail,
+                deliveryAddress: data.deliveryAddress,
                 items: {
                     create: data.items.map((item) => ({
                         productId: item.productId,
@@ -435,7 +479,7 @@ export async function getOrderHistory({
         }),
     };
 
-    const [data, total] = await Promise.all([
+    const [rawData, total] = await Promise.all([
         prisma.order.findMany({
             where,
             skip,
@@ -455,6 +499,26 @@ export async function getOrderHistory({
         }),
         prisma.order.count({ where }),
     ]);
+
+    // Transform Decimal fields to numbers for client component serialization
+    const data = rawData.map(order => ({
+        ...order,
+        subtotal: Number(order.subtotal),
+        tax: Number(order.tax),
+        discount: Number(order.discount || 0),
+        tip: Number(order.tip || 0),
+        total: Number(order.total),
+        items: order.items.map(item => ({
+            ...item,
+            unitPrice: Number(item.unitPrice),
+            subtotal: Number(item.subtotal),
+            product: {
+                ...item.product,
+                price: Number(item.product.price),
+                cost: Number(item.product.cost || 0),
+            }
+        }))
+    }));
 
     const totalPages = Math.ceil(total / limit);
 

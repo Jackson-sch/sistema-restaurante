@@ -16,6 +16,7 @@ import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { OrderTypeBadge } from './order-type-badge';
 
 // Define the shape of the data for the table
 // Override Decimal fields with number for client component serialization
@@ -42,11 +43,7 @@ export const columns: ColumnDef<OrderColumn>[] = [
         header: createSortableHeader('Tipo'),
         cell: ({ row }) => {
             const type = row.getValue('type') as string;
-            return (
-                <Badge variant="outline">
-                    {type === 'DINE_IN' ? 'Mesa' : type === 'TAKEOUT' ? 'Para llevar' : 'Delivery'}
-                </Badge>
-            );
+            return <OrderTypeBadge type={type as any} />;
         },
     },
     {

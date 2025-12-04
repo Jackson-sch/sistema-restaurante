@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { getTables } from "@/actions/tables"
 import { TableDialog } from "@/components/tables/table-dialog"
 import { TableCard } from "@/components/tables/table-card"
@@ -18,6 +19,7 @@ interface TablesViewProps {
 }
 
 export function TablesView({ categories = [], products = [] }: TablesViewProps) {
+    const router = useRouter()
     const [tables, setTables] = useState<TableWithRelations[]>([])
     const [isRefreshing, setIsRefreshing] = useState(false)
     const [lastUpdate, setLastUpdate] = useState<Date>(new Date())
@@ -50,21 +52,18 @@ export function TablesView({ categories = [], products = [] }: TablesViewProps) 
     const handleOrderCreated = () => {
         setQuickOrderOpen(false)
         setSelectedTable(null)
+        router.refresh()
         fetchTables()
     }
 
-    // Initial load
+    const handleRefresh = () => {
+        router.refresh()
+        fetchTables(true)
+    }
+
+    // Initial load only
     useEffect(() => {
         fetchTables()
-    }, [])
-
-    // Auto-refresh every 15 seconds
-    useEffect(() => {
-        const interval = setInterval(() => {
-            fetchTables()
-        }, 15000) // 15 seconds
-
-        return () => clearInterval(interval)
     }, [])
 
     return (
@@ -80,14 +79,17 @@ export function TablesView({ categories = [], products = [] }: TablesViewProps) 
                     <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => fetchTables(true)}
+                        onClick={handleRefresh}
                         disabled={isRefreshing}
                         className="gap-2"
                     >
                         <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
                         Actualizar
                     </Button>
-                    <TableDialog onSuccess={() => fetchTables()} />
+                    <TableDialog onSuccess={() => {
+                        router.refresh()
+                        fetchTables()
+                    }} />
                 </div>
             </div>
 
@@ -113,7 +115,10 @@ export function TablesView({ categories = [], products = [] }: TablesViewProps) 
                                     <TableCard
                                         key={table.id}
                                         table={table as any}
-                                        onUpdate={() => fetchTables()}
+                                        onUpdate={() => {
+                                            router.refresh()
+                                            fetchTables()
+                                        }}
                                         onQuickOrder={categories.length > 0 && products.length > 0 ? handleQuickOrder : undefined}
                                     />
                                 ))}
@@ -128,7 +133,7 @@ export function TablesView({ categories = [], products = [] }: TablesViewProps) 
             )}
 
             <div className="text-xs text-muted-foreground text-center" suppressHydrationWarning>
-                Última actualización: {lastUpdate.toLocaleTimeString()} • Auto-actualización cada 15s
+                Última actualización: {lastUpdate.toLocaleTimeString()}
             </div>
 
             {/* Quick Order Dialog */}
@@ -147,6 +152,7 @@ export function TablesView({ categories = [], products = [] }: TablesViewProps) 
                             setSelectedTable(null)
                         }
                     }}
+                    onSuccess={handleOrderCreated}
                 />
             )}
         </div>

@@ -24,6 +24,7 @@ import {
 import { getOrderDetails } from "@/actions/order-details"
 import { formatCurrency } from "@/lib/utils"
 import { toast } from "sonner"
+import { OrderTypeBadge } from "@/components/orders/order-type-badge"
 
 interface OrderDetailsDialogProps {
   orderId: string
@@ -96,13 +97,18 @@ export function OrderDetailsDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
+          <DialogTitle className="flex items-center justify-between gap-2">
             <span>Orden {order?.orderNumber || "..."}</span>
-            {order && (
-              <Badge className={getStatusConfig(order.status).color}>
-                {getStatusConfig(order.status).label}
-              </Badge>
-            )}
+            <div className="flex items-center gap-2">
+              {order && order.type && (
+                <OrderTypeBadge type={order.type as any} />
+              )}
+              {order && (
+                <Badge className={getStatusConfig(order.status).color}>
+                  {getStatusConfig(order.status).label}
+                </Badge>
+              )}
+            </div>
           </DialogTitle>
           <DialogDescription>
             Detalles completos de la orden
@@ -137,6 +143,27 @@ export function OrderDetailsDialog({
                     <User className="h-4 w-4 text-muted-foreground" />
                     <span className="text-muted-foreground">Mesero:</span>
                     <span className="font-medium">{order.waiter.name}</span>
+                  </div>
+                )}
+                {/* Customer Info for TAKEOUT/DELIVERY */}
+                {order.type !== 'DINE_IN' && order.customerName && (
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">Cliente:</span>
+                    <span className="font-medium">{order.customerName}</span>
+                  </div>
+                )}
+                {order.type !== 'DINE_IN' && order.customerPhone && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground">Teléfono:</span>
+                    <span className="font-medium">{order.customerPhone}</span>
+                  </div>
+                )}
+                {order.type === 'DELIVERY' && order.deliveryAddress && (
+                  <div className="flex items-center gap-2 col-span-2">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">Dirección:</span>
+                    <span className="font-medium">{order.deliveryAddress}</span>
                   </div>
                 )}
                 <div className="flex items-center gap-2">

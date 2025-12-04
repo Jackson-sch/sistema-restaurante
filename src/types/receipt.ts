@@ -1,8 +1,7 @@
 // Receipt-related types
 
 export enum ReceiptType {
-    TICKET = 'TICKET',
-    NOTA = 'NOTA',
+    NOTA_VENTA = 'NOTA_VENTA',
     BOLETA = 'BOLETA',
     FACTURA = 'FACTURA',
 }

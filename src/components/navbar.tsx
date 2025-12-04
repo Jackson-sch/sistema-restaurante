@@ -49,6 +49,16 @@ export async function Navbar() {
         variants: product.variants.map(variant => ({
           ...variant,
           price: Number(variant.price)
+        })),
+        modifierGroups: product.modifierGroups.map(pmg => ({
+          ...pmg,
+          modifierGroup: {
+            ...pmg.modifierGroup,
+            modifiers: pmg.modifierGroup.modifiers.map(m => ({
+              ...m,
+              price: Number(m.price)
+            }))
+          }
         }))
       }));
     } catch (error) {

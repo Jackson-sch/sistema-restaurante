@@ -11,7 +11,9 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import type { CartItem } from "@/types/order"
 import { TableSelector, type TableData } from "./table-selector"
-
+import type { OrderType } from "./order-type-selector"
+import type { CustomerInfo } from "./customer-info-form"
+import { OrderTypeConfig } from "./order-type-config"
 interface OrderCartProps {
     items: CartItem[]
     onRemove: (tempId: string) => void
@@ -22,7 +24,11 @@ interface OrderCartProps {
     tables: TableData[]
     selectedTable: TableData | null
     onTableChange: (table: TableData | null) => void
-    onClose?: () => void // For mobile drawer
+    onClose?: () => void
+    orderType: OrderType
+    customerInfo: CustomerInfo
+    onOrderTypeChange: (type: OrderType) => void
+    onCustomerInfoChange: (info: CustomerInfo) => void
 }
 
 export function OrderCart({
@@ -36,6 +42,10 @@ export function OrderCart({
     selectedTable,
     onTableChange,
     onClose,
+    orderType,
+    customerInfo,
+    onOrderTypeChange,
+    onCustomerInfoChange,
 }: OrderCartProps) {
     const router = useRouter()
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -57,9 +67,25 @@ export function OrderCart({
     const handleCreateOrder = async () => {
         if (items.length === 0) return
 
-        if (!selectedTable) {
-            toast.error("Por favor selecciona una mesa")
-            return
+        // Validate based on order type
+        if (orderType === 'DINE_IN') {
+            if (!selectedTable) {
+                toast.error("Por favor selecciona una mesa")
+                return
+            }
+        } else {
+            if (!customerInfo.name.trim()) {
+                toast.error("Por favor ingresa el nombre del cliente")
+                return
+            }
+            if (!customerInfo.phone.trim()) {
+                toast.error("Por favor ingresa el teléfono del cliente")
+                return
+            }
+            if (orderType === 'DELIVERY' && !customerInfo.deliveryAddress?.trim()) {
+                toast.error("Por favor ingresa la dirección de entrega")
+                return
+            }
         }
 
         setIsSubmitting(true)
@@ -80,7 +106,12 @@ export function OrderCart({
                 total: total,
                 subtotal: subtotal,
                 tax: 0,
-                tableId: selectedTable.id,
+                type: orderType,
+                tableId: orderType === 'DINE_IN' ? selectedTable?.id : undefined,
+                customerName: orderType !== 'DINE_IN' ? customerInfo.name : undefined,
+                customerPhone: orderType !== 'DINE_IN' ? customerInfo.phone : undefined,
+                customerEmail: orderType !== 'DINE_IN' ? customerInfo.email : undefined,
+                deliveryAddress: orderType === 'DELIVERY' ? customerInfo.deliveryAddress : undefined,
             })
 
             if (result.success) {
@@ -125,12 +156,41 @@ export function OrderCart({
                         )}
                     </div>
                 </div>
-                <TableSelector
-                    tables={tables}
-                    selectedTable={selectedTable}
-                    onSelectTable={onTableChange}
-                    disabled={isSubmitting}
+
+                <OrderTypeConfig
+                    orderType={orderType}
+                    onOrderTypeChange={onOrderTypeChange}
+                    customerInfo={customerInfo}
+                    onCustomerInfoChange={onCustomerInfoChange}
                 />
+
+                {orderType === 'DINE_IN' ? (
+                    <TableSelector
+                        tables={tables}
+                        selectedTable={selectedTable}
+                        onSelectTable={onTableChange}
+                        disabled={isSubmitting}
+                    />
+                ) : (
+                    <div className="text-sm space-y-1.5 p-3 bg-muted/50 rounded-lg border">
+                        <div className="flex items-center justify-between">
+                            <span className="text-muted-foreground">Cliente:</span>
+                            <span className="font-medium">{customerInfo.name || 'Sin especificar'}</span>
+                        </div>
+                        {customerInfo.phone && (
+                            <div className="flex items-center justify-between">
+                                <span className="text-muted-foreground">Teléfono:</span>
+                                <span className="font-medium">{customerInfo.phone}</span>
+                            </div>
+                        )}
+                        {orderType === 'DELIVERY' && customerInfo.deliveryAddress && (
+                            <div className="flex items-start justify-between gap-2">
+                                <span className="text-muted-foreground">Dirección:</span>
+                                <span className="font-medium text-right text-xs leading-relaxed">{customerInfo.deliveryAddress}</span>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Items List */}

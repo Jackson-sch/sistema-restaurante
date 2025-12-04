@@ -28,6 +28,7 @@ interface NewOrderDialogProps {
     preselectedTable?: { id: string; number: string } | null
     isOpen?: boolean
     onOpenChange?: (open: boolean) => void
+    onSuccess?: () => void
 }
 
 export function NewOrderDialog({
@@ -38,7 +39,8 @@ export function NewOrderDialog({
     showLabel = true,
     preselectedTable = null,
     isOpen: externalOpen,
-    onOpenChange: externalOnOpenChange
+    onOpenChange: externalOnOpenChange,
+    onSuccess
 }: NewOrderDialogProps) {
     const { hasPermission } = usePermissions()
     const [internalOpen, setInternalOpen] = useState(false)
@@ -103,6 +105,7 @@ export function NewOrderDialog({
                         onOrderCreated={() => {
                             fetchTables() // Refresh tables after order creation
                             setOpen(false)
+                            onSuccess?.() // Call parent callback
                         }}
                         onRefreshTables={fetchTables}
                     />

@@ -26,9 +26,10 @@ interface ZoneDialogProps {
     trigger?: React.ReactNode
     open?: boolean
     onOpenChange?: (open: boolean) => void
+    onSuccess?: () => void
 }
 
-export function ZoneDialog({ zone, trigger, open: controlledOpen, onOpenChange }: ZoneDialogProps) {
+export function ZoneDialog({ zone, trigger, open: controlledOpen, onOpenChange, onSuccess }: ZoneDialogProps) {
     const [internalOpen, setInternalOpen] = useState(false)
     const [isPending, startTransition] = useTransition()
 
@@ -69,6 +70,7 @@ export function ZoneDialog({ zone, trigger, open: controlledOpen, onOpenChange }
                 if (result.success) {
                     toast.success("Zona actualizada correctamente")
                     setOpen(false)
+                    onSuccess?.()
                 } else {
                     toast.error(result.error)
                 }
@@ -78,6 +80,7 @@ export function ZoneDialog({ zone, trigger, open: controlledOpen, onOpenChange }
                     toast.success("Zona creada correctamente")
                     setOpen(false)
                     reset()
+                    onSuccess?.()
                 } else {
                     toast.error(result.error)
                 }

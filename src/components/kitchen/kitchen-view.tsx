@@ -8,6 +8,8 @@ import { RefreshCw, Activity, TrendingUp, Check } from "lucide-react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import StatCard from "@/components/stat-card"
+import { format } from "date-fns"
+import { es } from "date-fns/locale"
 
 type KitchenOrder = Awaited<ReturnType<typeof getKitchenOrders>>[number]
 
@@ -58,7 +60,7 @@ export function KitchenView() {
         icon: Activity,
         iconColor: "text-primary",
         description: "Pedidos activos en la cocina",
-        
+
     }, {
         title: "Pendientes",
         value: orders.filter(o => o.status === 'PENDING' || o.status === 'CONFIRMED').length,
@@ -133,7 +135,7 @@ export function KitchenView() {
             <div className="fixed bottom-0 flex items-center justify-center gap-2 text-xs text-muted-foreground pb-2">
                 <div className="flex items-center gap-1.5">
                     <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                    <span>Última actualización: {lastUpdate.toLocaleTimeString()}</span>
+                    <span>Última actualización: {format(lastUpdate, "HH:mm:ss", { locale: es })}</span>
                 </div>
                 <span>•</span>
                 <span>Auto-actualización cada 15s</span>
