@@ -139,40 +139,42 @@ export function DataTable<TData, TValue>({
     return (
         <div className="w-full space-y-4">
             {/* Filters and Search */}
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                 <SearchInput
                     value={searchValue !== undefined ? searchValue : (globalFilter ?? "")}
                     onChange={onSearchChange || setGlobalFilter}
                     placeholder={searchPlaceholder}
-                    className="max-w-sm"
+                    className="w-full max-w-sm"
                 />
-                {filterComponent}
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="outline">
-                            Columnas <ChevronDown className="ml-2 h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        {table
-                            .getAllColumns()
-                            .filter((column) => column.getCanHide())
-                            .map((column) => {
-                                return (
-                                    <DropdownMenuCheckboxItem
-                                        key={column.id}
-                                        className="capitalize"
-                                        checked={column.getIsVisible()}
-                                        onCheckedChange={(value) =>
-                                            column.toggleVisibility(!!value)
-                                        }
-                                    >
-                                        {column.id}
-                                    </DropdownMenuCheckboxItem>
-                                )
-                            })}
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="flex items-center gap-2">
+                    {filterComponent}
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline">
+                                Columnas <ChevronDown className="ml-2 h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            {table
+                                .getAllColumns()
+                                .filter((column) => column.getCanHide())
+                                .map((column) => {
+                                    return (
+                                        <DropdownMenuCheckboxItem
+                                            key={column.id}
+                                            className="capitalize"
+                                            checked={column.getIsVisible()}
+                                            onCheckedChange={(value) =>
+                                                column.toggleVisibility(!!value)
+                                            }
+                                        >
+                                            {column.id}
+                                        </DropdownMenuCheckboxItem>
+                                    )
+                                })}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             </div>
 
             {/* Table */}
@@ -228,16 +230,16 @@ export function DataTable<TData, TValue>({
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-between px-2">
-                <div className="flex-1 text-sm text-muted-foreground">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2">
+                <div className="text-sm text-muted-foreground">
                     {isServerSide
-                        ? `${data.length} resultado(s) encontrado(s)`
-                        : `${table.getFilteredRowModel().rows.length} resultado(s) encontrado(s)`
+                        ? `${data.length} resultado(s)`
+                        : `${table.getFilteredRowModel().rows.length} resultado(s)`
                     }
                 </div>
-                <div className="flex items-center space-x-6 lg:space-x-8">
-                    <div className="flex items-center space-x-2">
-                        <p className="text-sm font-medium">Filas por página</p>
+                <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 lg:gap-8">
+                    <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium whitespace-nowrap">Filas por página</p>
                         <Select
                             value={`${table.getState().pagination.pageSize}`}
                             onValueChange={(value) => {
@@ -261,71 +263,73 @@ export function DataTable<TData, TValue>({
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-                        Página {table.getState().pagination.pageIndex + 1} de{" "}
-                        {isServerSide ? pageCount : table.getPageCount()}
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <Button
-                            variant="outline"
-                            className="h-8 w-8 p-0"
-                            onClick={() => {
-                                if (isServerSide && onPageChange) {
-                                    onPageChange(1)
-                                } else {
-                                    table.setPageIndex(0)
-                                }
-                            }}
-                            disabled={!table.getCanPreviousPage()}
-                        >
-                            <span className="sr-only">Ir a la primera página</span>
-                            {"<<"}
-                        </Button>
-                        <Button
-                            variant="outline"
-                            className="h-8 w-8 p-0"
-                            onClick={() => {
-                                if (isServerSide && onPageChange) {
-                                    onPageChange(currentPage! - 1)
-                                } else {
-                                    table.previousPage()
-                                }
-                            }}
-                            disabled={!table.getCanPreviousPage()}
-                        >
-                            <span className="sr-only">Ir a la página anterior</span>
-                            {"<"}
-                        </Button>
-                        <Button
-                            variant="outline"
-                            className="h-8 w-8 p-0"
-                            onClick={() => {
-                                if (isServerSide && onPageChange) {
-                                    onPageChange(currentPage! + 1)
-                                } else {
-                                    table.nextPage()
-                                }
-                            }}
-                            disabled={!table.getCanNextPage()}
-                        >
-                            <span className="sr-only">Ir a la página siguiente</span>
-                            {">"}
-                        </Button>
-                        <Button
-                            variant="outline"
-                            className="h-8 w-8 p-0"
-                            onClick={() => {
-                                if (isServerSide && onPageChange) {
-                                    onPageChange(pageCount!)
-                                } else {
-                                    table.setPageIndex(table.getPageCount() - 1)
-                                }
-                            }}
-                            disabled={!table.getCanNextPage()}
-                        >
-                            <span className="sr-only">Ir a la última página</span>
-                            {">>"}
-                        </Button>
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center justify-center text-sm font-medium whitespace-nowrap">
+                            Pág. {table.getState().pagination.pageIndex + 1} de{" "}
+                            {isServerSide ? pageCount : table.getPageCount()}
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                className="hidden sm:flex h-8 w-8 p-0"
+                                onClick={() => {
+                                    if (isServerSide && onPageChange) {
+                                        onPageChange(1)
+                                    } else {
+                                        table.setPageIndex(0)
+                                    }
+                                }}
+                                disabled={!table.getCanPreviousPage()}
+                            >
+                                <span className="sr-only">Ir a la primera página</span>
+                                {"<<"}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                className="h-8 w-8 p-0"
+                                onClick={() => {
+                                    if (isServerSide && onPageChange) {
+                                        onPageChange(currentPage! - 1)
+                                    } else {
+                                        table.previousPage()
+                                    }
+                                }}
+                                disabled={!table.getCanPreviousPage()}
+                            >
+                                <span className="sr-only">Ir a la página anterior</span>
+                                {"<"}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                className="h-8 w-8 p-0"
+                                onClick={() => {
+                                    if (isServerSide && onPageChange) {
+                                        onPageChange(currentPage! + 1)
+                                    } else {
+                                        table.nextPage()
+                                    }
+                                }}
+                                disabled={!table.getCanNextPage()}
+                            >
+                                <span className="sr-only">Ir a la página siguiente</span>
+                                {">"}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                className="hidden sm:flex h-8 w-8 p-0"
+                                onClick={() => {
+                                    if (isServerSide && onPageChange) {
+                                        onPageChange(pageCount!)
+                                    } else {
+                                        table.setPageIndex(table.getPageCount() - 1)
+                                    }
+                                }}
+                                disabled={!table.getCanNextPage()}
+                            >
+                                <span className="sr-only">Ir a la última página</span>
+                                {">>"}
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>

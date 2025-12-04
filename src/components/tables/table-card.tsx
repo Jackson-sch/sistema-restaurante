@@ -15,6 +15,9 @@ import {
     UtensilsCrossed,
     ShoppingBag,
     MoreHorizontal,
+    Plus,
+    Eye,
+    CreditCard,
 } from "lucide-react"
 import { deleteTable, updateTableStatus } from "@/actions/tables"
 import { toast } from "sonner"
@@ -28,6 +31,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 import { TableDialog } from "./table-dialog"
+import { OrderDetailsDialog } from "./order-details-dialog"
+import { QuickPaymentDialog } from "./quick-payment-dialog"
 
 type OrderStatus = "PENDING" | "PREPARING" | "READY" | "SERVED" | "COMPLETED" | "CANCELLED"
 type OrderType = "DINE_IN" | "TAKEOUT" | "DELIVERY"
@@ -49,12 +54,18 @@ interface TableCardProps {
     }
     onViewOrders?: (tableId: string) => void
     onUpdate?: () => void
+    onQuickOrder?: (table: Table) => void
 }
 
-export function TableCard({ table, onViewOrders, onUpdate }: TableCardProps) {
+export function TableCard({ table, onViewOrders, onUpdate, onQuickOrder }: TableCardProps) {
     const [isPending, startTransition] = useTransition()
     const [isHovered, setIsHovered] = useState(false)
     const [editDialogOpen, setEditDialogOpen] = useState(false)
+    const [orderDetailsOpen, setOrderDetailsOpen] = useState(false)
+    const [paymentDialogOpen, setPaymentDialogOpen] = useState(false)
+    const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
+    const [selectedOrderNumber, setSelectedOrderNumber] = useState<string>("")
+    const [selectedOrderTotal, setSelectedOrderTotal] = useState<number>(0)
 
     // Filter active orders (not completed or cancelled)
     const activeOrders = table.orders?.filter((order) => !["COMPLETED", "CANCELLED"].includes(order.status)) || []
@@ -276,14 +287,91 @@ export function TableCard({ table, onViewOrders, onUpdate }: TableCardProps) {
                                 </button>
                             )}
                         </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-2 pt-2">
+                            <Button
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    const firstOrder = activeOrders[0]
+                                    setSelectedOrderId(firstOrder.id)
+                                    setSelectedOrderNumber(firstOrder.orderNumber)
+                                    setSelectedOrderTotal(firstOrder.total)
+                                    setOrderDetailsOpen(true)
+                                }}
+                                variant="outline"
+                                size="sm"
+                                className="flex-1"
+                            >
+                                <Eye className="h-4 w-4 mr-1" />
+                                Detalles
+                            </Button>
+                            <Button
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    const firstOrder = activeOrders[0]
+                                    setSelectedOrderId(firstOrder.id)
+                                    setSelectedOrderNumber(firstOrder.orderNumber)
+                                    setSelectedOrderTotal(firstOrder.total)
+                                    setPaymentDialogOpen(true)
+                                }}
+                                size="sm"
+                                className="flex-1"
+                            >
+                                <CreditCard className="h-4 w-4 mr-1" />
+                                Pagar
+                            </Button>
+                        </div>
                     </div>
                 ) : (
-                    <div className="flex items-center justify-center py-4 text-sm text-muted-foreground">
-                        <Clock className="h-4 w-4 mr-2" />
-                        Sin órdenes activas
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-center py-2 text-sm text-muted-foreground">
+                            <Clock className="h-4 w-4 mr-2" />
+                            Sin órdenes activas
+                        </div>
+                        {table.status === "AVAILABLE" && onQuickOrder && (
+                            <Button
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    onQuickOrder(table)
+                                }}
+                                className="w-full"
+                                size="sm"
+                                variant="default"
+                            >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Nuevo Pedido
+                            </Button>
+                        )}
                     </div>
                 )}
             </CardContent>
+
+            {/* Dialogs */}
+            {selectedOrderId && (
+                <>
+                    <OrderDetailsDialog
+                        orderId={selectedOrderId}
+                        open={orderDetailsOpen}
+                        onOpenChange={setOrderDetailsOpen}
+                        onPaymentClick={() => {
+                            setOrderDetailsOpen(false)
+                            setPaymentDialogOpen(true)
+                        }}
+                    />
+                    <QuickPaymentDialog
+                        orderId={selectedOrderId}
+                        orderNumber={selectedOrderNumber}
+                        totalAmount={selectedOrderTotal}
+                        open={paymentDialogOpen}
+                        onOpenChange={setPaymentDialogOpen}
+                        onSuccess={() => {
+                            onUpdate?.()
+                            setSelectedOrderId(null)
+                        }}
+                    />
+                </>
+            )}
         </Card>
     )
 }

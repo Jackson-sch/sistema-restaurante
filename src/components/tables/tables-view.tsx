@@ -4,16 +4,25 @@ import { useEffect, useState } from "react"
 import { getTables } from "@/actions/tables"
 import { TableDialog } from "@/components/tables/table-dialog"
 import { TableCard } from "@/components/tables/table-card"
+import { NewOrderDialog } from "@/components/orders/new-order-dialog"
 import { RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
+import type { Table } from "@prisma/client"
 
 type TableWithRelations = NonNullable<Awaited<ReturnType<typeof getTables>>["data"]>[number]
 
-export function TablesView() {
+interface TablesViewProps {
+    categories?: any[]
+    products?: any[]
+}
+
+export function TablesView({ categories = [], products = [] }: TablesViewProps) {
     const [tables, setTables] = useState<TableWithRelations[]>([])
     const [isRefreshing, setIsRefreshing] = useState(false)
     const [lastUpdate, setLastUpdate] = useState<Date>(new Date())
+    const [quickOrderOpen, setQuickOrderOpen] = useState(false)
+    const [selectedTable, setSelectedTable] = useState<Table | null>(null)
 
     const fetchTables = async (showToast = false) => {
         setIsRefreshing(true)
@@ -31,6 +40,17 @@ export function TablesView() {
         } finally {
             setIsRefreshing(false)
         }
+    }
+
+    const handleQuickOrder = (table: Table) => {
+        setSelectedTable(table)
+        setQuickOrderOpen(true)
+    }
+
+    const handleOrderCreated = () => {
+        setQuickOrderOpen(false)
+        setSelectedTable(null)
+        fetchTables()
     }
 
     // Initial load
@@ -90,7 +110,12 @@ export function TablesView() {
                             <h2 className="text-xl font-semibold border-b pb-2">{zoneName}</h2>
                             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                                 {zoneTables.map((table) => (
-                                    <TableCard key={table.id} table={table as any} onUpdate={() => fetchTables()} />
+                                    <TableCard
+                                        key={table.id}
+                                        table={table as any}
+                                        onUpdate={() => fetchTables()}
+                                        onQuickOrder={categories.length > 0 && products.length > 0 ? handleQuickOrder : undefined}
+                                    />
                                 ))}
                             </div>
                         </div>
@@ -105,6 +130,25 @@ export function TablesView() {
             <div className="text-xs text-muted-foreground text-center" suppressHydrationWarning>
                 Última actualización: {lastUpdate.toLocaleTimeString()} • Auto-actualización cada 15s
             </div>
+
+            {/* Quick Order Dialog */}
+            {categories.length > 0 && products.length > 0 && selectedTable && (
+                <NewOrderDialog
+                    categories={categories}
+                    products={products}
+                    buttonSize="lg"
+                    buttonVariant="default"
+                    showLabel={false}
+                    preselectedTable={{ id: selectedTable.id, number: selectedTable.number }}
+                    isOpen={quickOrderOpen}
+                    onOpenChange={(open) => {
+                        setQuickOrderOpen(open)
+                        if (!open) {
+                            setSelectedTable(null)
+                        }
+                    }}
+                />
+            )}
         </div>
     )
 }

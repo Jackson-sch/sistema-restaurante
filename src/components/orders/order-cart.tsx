@@ -222,7 +222,10 @@ export function OrderCart({
             </ScrollArea>
 
             {/* Footer Summary */}
-            <div className="bg-background border-t p-3 md:p-4 space-y-3 md:space-y-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-10">
+            <div
+                className="bg-background border-t p-3 md:p-4 space-y-3 md:space-y-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-10"
+                style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 1rem))' }}
+            >
                 <div className="space-y-2 text-sm">
                     <div className="flex justify-between text-muted-foreground">
                         <span>Subtotal</span>

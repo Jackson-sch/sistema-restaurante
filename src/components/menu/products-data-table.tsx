@@ -24,19 +24,19 @@ export function ProductsDataTable({ data, categories }: ProductsDataTableProps) 
 
     // Filter component for category selection
     const filterComponent = (
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Todas las categorías" />
-            </SelectTrigger>
-            <SelectContent>
-                <SelectItem value="all">Todas las categorías</SelectItem>
-                {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                        {category.name}
-                    </SelectItem>
-                ))}
-            </SelectContent>
-        </Select>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Todas las categorías" />
+                </SelectTrigger>
+                <SelectContent position="popper" className="w-full" sideOffset={5}>
+                    <SelectItem value="all">Todas las categorías</SelectItem>
+                    {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
     )
 
     // Filter data by category

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import type { Category, Product, ProductVariant, ModifierGroup, Modifier, ProductModifierGroup } from "@prisma/client"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
@@ -37,6 +37,7 @@ interface OrderInterfaceProps {
     categories: Category[]
     products: ProductWithRelations[]
     tables: TableData[]
+    preselectedTable?: { id: string; number: string } | null
     onOrderCreated?: () => void
     onRefreshTables?: () => void
 }
@@ -57,7 +58,7 @@ const getCategoryIcon = (name: string) => {
     if (normalized.includes("bebida") || normalized.includes("drink") || normalized.includes("cafe")) return Coffee
     if (normalized.includes("comida") || normalized.includes("food") || normalized.includes("burger"))
         return UtensilsCrossed
-    if (normalized.includes("postre") || normalized.includes("dessert") || normalized.includes("helado")) return IceCream
+    if (normalized.includes("postres") || normalized.includes("dessert") || normalized.includes("helado")) return IceCream
     if (normalized.includes("alcohol") || normalized.includes("beer") || normalized.includes("cerveza")) return Beer
     if (normalized.includes("entrada") || normalized.includes("entrada") || normalized.includes("entrada")) return HandPlatter
     if (normalized.includes("platos") || normalized.includes("platos") || normalized.includes("platos")) return UtensilsCrossedIcon
@@ -65,12 +66,29 @@ const getCategoryIcon = (name: string) => {
     return LayoutGrid
 }
 
-export function OrderInterface({ categories, products, tables, onOrderCreated, onRefreshTables }: OrderInterfaceProps) {
+export function OrderInterface({ categories, products, tables, preselectedTable, onOrderCreated, onRefreshTables }: OrderInterfaceProps) {
     const [selectedCategory, setSelectedCategory] = useState<string>("all")
     const [searchQuery, setSearchQuery] = useState("")
     const [cart, setCart] = useState<CartItem[]>([])
-    const [selectedTable, setSelectedTable] = useState<TableData | null>(null)
     const [isMobileCartOpen, setIsMobileCartOpen] = useState(false)
+
+    // Initialize selectedTable with preselectedTable if provided
+    const [selectedTable, setSelectedTable] = useState<TableData | null>(() => {
+        if (preselectedTable) {
+            return tables.find(t => t.id === preselectedTable.id) || null
+        }
+        return null
+    })
+
+    // Update selectedTable when preselectedTable changes
+    useEffect(() => {
+        if (preselectedTable) {
+            const table = tables.find(t => t.id === preselectedTable.id)
+            if (table) {
+                setSelectedTable(table)
+            }
+        }
+    }, [preselectedTable, tables])
 
     const filteredProducts = products.filter((p) => {
         const matchesCategory = selectedCategory === "all" || p.categoryId === selectedCategory
@@ -144,7 +162,7 @@ export function OrderInterface({ categories, products, tables, onOrderCreated, o
     }
 
     return (
-        <div className="flex h-screen w-full bg-background overflow-hidden font-sans">
+        <div className="flex h-dvh w-full bg-background overflow-hidden font-sans">
             {/* Left Side: Sidebar Navigation */}
             <aside className="w-16 md:w-20 lg:w-24 border-r flex flex-col items-center py-4 md:py-6 bg-card z-30">
                 <div className="mb-6 md:mb-8 p-1.5 md:p-2 rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
@@ -244,7 +262,8 @@ export function OrderInterface({ categories, products, tables, onOrderCreated, o
             {/* Mobile Cart: Floating Button */}
             <button
                 onClick={() => setIsMobileCartOpen(true)}
-                className="md:hidden fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:scale-110 transition-transform flex items-center justify-center"
+                className="md:hidden fixed bottom-20 right-6 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:scale-110 transition-transform flex items-center justify-center"
+                style={{ bottom: 'calc(5rem + env(safe-area-inset-bottom))' }}
             >
                 <div className="relative">
                     <ShoppingBag className="h-6 w-6" />
