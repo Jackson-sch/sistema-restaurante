@@ -10,13 +10,20 @@ import { Badge } from "@/components/ui/badge"
 import StatCard from "@/components/stat-card"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
+import { useOrderNotifications } from "@/hooks/use-order-notifications"
+import { NotificationSound } from "@/components/kitchen/notification-sound"
+import { NotificationSettings } from "@/components/kitchen/notification-settings"
 
 type KitchenOrder = Awaited<ReturnType<typeof getKitchenOrders>>[number]
 
 export function KitchenView() {
     const [orders, setOrders] = useState<KitchenOrder[]>([])
     const [isRefreshing, setIsRefreshing] = useState(false)
-    const [lastUpdate, setLastUpdate] = useState<Date>(new Date())
+    const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
+    const [shouldPlaySound, setShouldPlaySound] = useState(false)
+
+    // Hook de notificaciones
+    const { newOrders, markAsRead, hasUnreadOrders } = useOrderNotifications(orders)
 
     const fetchOrders = async (showToast = false) => {
         setIsRefreshing(true)
@@ -38,6 +45,21 @@ export function KitchenView() {
             setIsRefreshing(false)
         }
     }
+
+    // Notificar cuando hay nuevos pedidos
+    useEffect(() => {
+        if (newOrders.length > 0) {
+            console.log('🆕 Nuevos pedidos detectados:', newOrders.length, newOrders)
+            setShouldPlaySound(true)
+            toast.success(
+                `${newOrders.length} nuevo${newOrders.length > 1 ? 's' : ''} pedido${newOrders.length > 1 ? 's' : ''}`,
+                {
+                    description: newOrders.map(o => `Orden ${o.orderNumber}`).join(', '),
+                    duration: 5000,
+                }
+            )
+        }
+    }, [newOrders])
 
     // Initial load
     useEffect(() => {
@@ -102,6 +124,7 @@ export function KitchenView() {
                 </div>
 
                 <div className="flex items-center gap-3">
+                    <NotificationSettings />
                     <Button
                         variant="outline"
                         size="default"
@@ -135,11 +158,17 @@ export function KitchenView() {
             <div className="fixed bottom-0 flex items-center justify-center gap-2 text-xs text-muted-foreground pb-2">
                 <div className="flex items-center gap-1.5">
                     <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                    <span>Última actualización: {format(lastUpdate, "HH:mm:ss", { locale: es })}</span>
+                    <span>Última actualización: {lastUpdate ? format(lastUpdate, "HH:mm:ss", { locale: es }) : "--:--:--"}</span>
                 </div>
                 <span>•</span>
                 <span>Auto-actualización cada 15s</span>
             </div>
+
+            {/* Componente de sonido */}
+            <NotificationSound
+                shouldPlay={shouldPlaySound}
+                onPlayed={() => setShouldPlaySound(false)}
+            />
         </div>
     )
 }

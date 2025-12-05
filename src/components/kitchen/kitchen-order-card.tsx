@@ -8,6 +8,7 @@ import { Clock, MapPin, ChevronRight, User, Flame, CheckCircle2, AlertCircle } f
 import { cn } from "@/lib/utils"
 import { updateOrderStatus } from "@/actions/orders"
 import { toast } from "sonner"
+import { OrderTimer } from "./order-timer"
 
 interface KitchenOrderCardProps {
     order: {
@@ -133,16 +134,7 @@ export function KitchenOrderCard({ order, onRefresh }: KitchenOrderCardProps) {
                         )}
                     </div>
                     {order.createdAt && (
-                        <div
-                            className={cn(
-                                "flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md",
-                                config?.bgColor,
-                                config?.color
-                            )}
-                        >
-                            <Clock className="w-3.5 h-3.5" />
-                            {getTimeAgo(order.createdAt)}
-                        </div>
+                        <OrderTimer createdAt={new Date(order.createdAt)} />
                     )}
                 </div>
 
@@ -199,11 +191,11 @@ export function KitchenOrderCard({ order, onRefresh }: KitchenOrderCardProps) {
                         className={cn(
                             "w-full gap-2 h-9 text-base font-semibold shadow-md transition-all",
                             order.status === "READY" &&
-                                "bg-teal-500/90 hover:bg-teal-600 dark:bg-teal-600/90 dark:hover:bg-teal-700",
+                            "bg-teal-500/90 hover:bg-teal-600 dark:bg-teal-600/90 dark:hover:bg-teal-700",
                             order.status === "PREPARING" &&
-                                "bg-blue-500/90 hover:bg-blue-600 dark:bg-blue-600/90 dark:hover:bg-blue-700",
+                            "bg-blue-500/90 hover:bg-blue-600 dark:bg-blue-600/90 dark:hover:bg-blue-700",
                             (order.status === "PENDING" || order.status === "CONFIRMED") &&
-                                "bg-slate-500/90 hover:bg-slate-600 dark:bg-slate-600/90 dark:hover:bg-slate-700"
+                            "bg-slate-500/90 hover:bg-slate-600 dark:bg-slate-600/90 dark:hover:bg-slate-700"
                         )}
                         variant={action.variant}
                     >

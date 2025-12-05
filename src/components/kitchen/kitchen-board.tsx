@@ -1,10 +1,10 @@
 "use client"
 
 import { KitchenOrderCard } from "./kitchen-order-card"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Clock, ChefHat, Bell, Utensils, Sparkles, TrendingUp } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
+
 
 interface KitchenBoardProps {
     orders: any[]
@@ -64,6 +64,7 @@ const columns = [
 
 export function KitchenBoard({ orders, onRefresh }: KitchenBoardProps) {
     const [animateNew, setAnimateNew] = useState<Record<string, boolean>>({})
+    const previousOrderIdsRef = useRef<Set<string>>(new Set())
 
     const getOrdersByStatuses = (statuses: string[]) => orders.filter((o) => statuses.includes(o.status))
 
@@ -86,19 +87,26 @@ export function KitchenBoard({ orders, onRefresh }: KitchenBoardProps) {
 
     // Detect new orders for animation
     useEffect(() => {
+        const currentOrderIds = new Set(orders.map(o => o.id))
         const newAnimations: Record<string, boolean> = {}
+
+        // Solo animar pedidos que son realmente nuevos
         orders.forEach((order) => {
-            if (!animateNew[order.id]) {
+            if (!previousOrderIdsRef.current.has(order.id)) {
                 newAnimations[order.id] = true
                 setTimeout(() => {
                     setAnimateNew((prev) => ({ ...prev, [order.id]: false }))
                 }, 1000)
             }
         })
+
         if (Object.keys(newAnimations).length > 0) {
             setAnimateNew((prev) => ({ ...prev, ...newAnimations }))
         }
-    }, [orders.length])
+
+        // Actualizar la referencia de IDs previos
+        previousOrderIdsRef.current = currentOrderIds
+    }, [orders])
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-4">
@@ -182,7 +190,7 @@ export function KitchenBoard({ orders, onRefresh }: KitchenBoardProps) {
                                 </div>
                             </div>
 
-                                {/* Progress bar para columnas activas - más sutil */}
+                            {/* Progress bar para columnas activas - más sutil */}
                             {hasOrders && (
                                 <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black/5 dark:bg-white/5 overflow-hidden">
                                     <div className={cn(
@@ -194,7 +202,7 @@ export function KitchenBoard({ orders, onRefresh }: KitchenBoardProps) {
                         </div>
 
                         {/* Orders List with improved spacing */}
-                        <ScrollArea className="flex-1 p-4">
+                        <div className="flex-1 p-4 overflow-y-auto">
                             <div className="space-y-3 pb-4">
                                 {columnOrders.map((order, index) => (
                                     <div
@@ -226,14 +234,14 @@ export function KitchenBoard({ orders, onRefresh }: KitchenBoardProps) {
                                             {/* Sparkles animados - más sutiles */}
                                             <Sparkles className="absolute -top-3 -right-3 w-5 h-5 text-yellow-500/40 animate-pulse" />
                                             <Sparkles className="absolute -bottom-2 -left-2 w-3 h-3 text-yellow-400/30 animate-pulse delay-150" />
-                                            
+
                                             {/* Círculo de fondo rotatorio - más sutil */}
                                             <div className={cn(
                                                 "absolute inset-0 rounded-2xl opacity-10 animate-spin-slow",
                                                 "bg-gradient-to-br",
                                                 column.bgGradient
                                             )} />
-                                            
+
                                             <Utensils className={cn(
                                                 "w-14 h-14 opacity-40 relative z-10",
                                                 column.iconClass,
@@ -249,7 +257,7 @@ export function KitchenBoard({ orders, onRefresh }: KitchenBoardProps) {
                                     </div>
                                 )}
                             </div>
-                        </ScrollArea>
+                        </div>
                     </div>
                 )
             })}

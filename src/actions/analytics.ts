@@ -243,3 +243,4 @@ async function getWaiterPerformance(restaurantId: string, from: Date, to: Date) 
     })
     .sort((a, b) => b.sales - a.sales)
 }
+

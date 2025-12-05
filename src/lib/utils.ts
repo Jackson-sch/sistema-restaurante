@@ -46,3 +46,24 @@ export function formatDate(
     return "";
   }
 }
+
+export function getElapsedTime(date: Date): {
+  minutes: number
+  seconds: number
+  totalMinutes: number
+  formatted: string
+} {
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const totalSeconds = Math.floor(diffMs / 1000)
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  const totalMinutes = Math.floor(diffMs / (1000 * 60))
+
+  return {
+    minutes,
+    seconds,
+    totalMinutes,
+    formatted: `${minutes}m ${seconds}s`
+  }
+}
