@@ -15,10 +15,8 @@ export function ReceiptTemplate({ data }: ReceiptTemplateProps) {
         return "BOLETA DE VENTA"
       case ReceiptType.FACTURA:
         return "FACTURA"
-      case ReceiptType.NOTA:
+      case ReceiptType.NOTA_VENTA:
         return "NOTA DE VENTA"
-      case ReceiptType.TICKET:
-        return "TICKET"
       default:
         return "COMPROBANTE"
     }
@@ -81,7 +79,7 @@ export function ReceiptTemplate({ data }: ReceiptTemplateProps) {
         <h2 style={{ fontSize: "13px", fontWeight: "bold", margin: "0 0 6px 0", letterSpacing: "1px" }}>
           {getReceiptTitle()}
         </h2>
-        {data.type !== ReceiptType.TICKET && (
+        {data.type !== ReceiptType.NOTA_VENTA && (
           <div style={{ fontSize: "12px", fontWeight: "bold", letterSpacing: "0.5px" }}>{data.number}</div>
         )}
       </div>

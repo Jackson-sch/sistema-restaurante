@@ -87,8 +87,7 @@ export const ReceiptPDF = ({ data }: ReceiptPDFProps) => {
         switch (data.type) {
             case ReceiptType.BOLETA: return 'BOLETA DE VENTA';
             case ReceiptType.FACTURA: return 'FACTURA';
-            case ReceiptType.NOTA: return 'NOTA DE VENTA';
-            case ReceiptType.TICKET: return 'TICKET';
+            case ReceiptType.NOTA_VENTA: return 'NOTA DE VENTA';
             default: return 'COMPROBANTE';
         }
     };
@@ -120,7 +119,7 @@ export const ReceiptPDF = ({ data }: ReceiptPDFProps) => {
                 {/* Receipt Type */}
                 <View style={styles.header}>
                     <Text style={{ fontSize: 11, fontWeight: 'bold', marginBottom: 2 }}>{getReceiptTitle()}</Text>
-                    {data.type !== ReceiptType.TICKET && (
+                    {data.type !== ReceiptType.NOTA_VENTA && (
                         <Text style={{ fontSize: 10, fontWeight: 'bold' }}>{data.number}</Text>
                     )}
                 </View>

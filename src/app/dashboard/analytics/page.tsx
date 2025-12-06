@@ -1,10 +1,16 @@
 import { getAnalyticsData } from "@/actions/analytics"
+import { getOrderTypeStats } from "@/actions/order-type-stats"
+import { formatCurrency } from "@/lib/utils"
 import { DateRangeFilter } from "@/components/dashboard/date-range-filter"
 import { WeeklyComparisonChart } from "@/components/analytics/weekly-comparison-chart"
 import { PeakHoursHeatmap } from "@/components/analytics/peak-hours-heatmap"
 import { CategoryBreakdown } from "@/components/analytics/category-breakdown"
 import { WaiterPerformance } from "@/components/analytics/waiter-performance"
+import { OrderTypeMetrics } from "@/components/analytics/order-type-metrics"
+import { OrderTypeBreakdownChart } from "@/components/analytics/order-type-breakdown-chart"
+import { TopProductsByType } from "@/components/analytics/top-products-by-type"
 import { DashboardGrid } from "@/components/dashboard/dashboard-grid"
+import { DashboardExportButton } from "@/components/dashboard/dashboard-export-button"
 import { AnimatedCard } from "@/components/dashboard/animated-card"
 
 interface AnalyticsPageProps {
@@ -33,6 +39,7 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
 
   const dateRange = from && to ? { from, to } : undefined
   const result = await getAnalyticsData(dateRange)
+  const orderTypeResult = await getOrderTypeStats(dateRange)
 
   if (!result.success || !result.data) {
     return (
@@ -43,6 +50,7 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
   }
 
   const { weeklyComparison, peakHours, categoryPerformance, waiterPerformance } = result.data
+  const orderTypeData = orderTypeResult.success ? orderTypeResult.data : null
 
   return (
     <div className="space-y-6">
@@ -53,28 +61,56 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
             Tendencias, rendimiento y proyecciones
           </p>
         </div>
-        <DateRangeFilter />
+        <div className="flex items-center gap-2">
+          <DashboardExportButton />
+          <DateRangeFilter />
+        </div>
       </div>
 
       <DashboardGrid className="grid gap-6 grid-cols-1 lg:grid-cols-2">
         {/* Weekly Comparison - Full Width */}
-        <AnimatedCard delay={0.1} className="col-span-4">
+        <div className="col-span-1 lg:col-span-2">
           <WeeklyComparisonChart data={weeklyComparison} />
-        </AnimatedCard>
+        </div>
 
         {/* Peak Hours & Categories - Split */}
-        <AnimatedCard delay={0.2} className="col-span-4 lg:col-span-2 h-full">
+        <div className="col-span-1 h-[380px]">
           <PeakHoursHeatmap data={peakHours} />
-        </AnimatedCard>
+        </div>
 
-        <AnimatedCard delay={0.3} className="col-span-4 lg:col-span-2 h-full">
+        <div className="col-span-1 h-[380px]">
           <CategoryBreakdown data={categoryPerformance} />
-        </AnimatedCard>
+        </div>
 
         {/* Waiter Performance - Full Width */}
-        <AnimatedCard delay={0.4} className="col-span-4">
+        <div className="col-span-1 lg:col-span-2">
           <WaiterPerformance data={waiterPerformance} />
-        </AnimatedCard>
+        </div>
+
+        {/* Order Type Analytics */}
+        {orderTypeData && (
+          <>
+            <div className="col-span-1 lg:col-span-2">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-bold">Análisis por Tipo de Orden</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {orderTypeData.totalOrders} órdenes • {formatCurrency(orderTypeData.totalSales)}
+                  </p>
+                </div>
+                <OrderTypeMetrics data={orderTypeData.byType} />
+              </div>
+            </div>
+
+            <div className="col-span-1 h-[400px]">
+              <OrderTypeBreakdownChart data={orderTypeData.byType} />
+            </div>
+
+            <div className="col-span-1 h-[400px]">
+              <TopProductsByType data={orderTypeData.byType} />
+            </div>
+          </>
+        )}
       </DashboardGrid>
     </div>
   )

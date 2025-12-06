@@ -14,13 +14,16 @@ import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon, Download, FileSpreadsheet, Loader2 } from "lucide-react"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { CalendarIcon, FileSpreadsheet, FileText, Loader2 } from "lucide-react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { cn } from "@/lib/utils"
-import { generateSalesExcel, generateInventoryExcel } from "@/actions/reports-export"
+import { generateSalesExcel, generateInventoryExcel, generateAnalyticsExcel, getAnalyticsDataForExport } from "@/actions/reports-export"
 import { toast } from "sonner"
 import { DateRange } from "react-day-picker"
+import { pdf } from "@react-pdf/renderer"
+import { AnalyticsPDFDocument } from "@/lib/pdf-generator"
 
 interface ReportExportDialogProps {
   open: boolean
@@ -29,14 +32,15 @@ interface ReportExportDialogProps {
 
 export function ReportExportDialog({ open, onOpenChange }: ReportExportDialogProps) {
   const [isPending, startTransition] = useTransition()
-  const [reportType, setReportType] = useState<"sales" | "inventory">("sales")
+  const [reportType, setReportType] = useState<"sales" | "inventory" | "analytics">("sales")
+  const [exportFormat, setExportFormat] = useState<"excel" | "pdf">("excel")
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: new Date(new Date().setDate(new Date().getDate() - 30)),
     to: new Date(),
   })
 
   const handleExport = () => {
-    if (reportType === "sales" && (!dateRange?.from || !dateRange?.to)) {
+    if ((reportType === "sales" || reportType === "analytics") && (!dateRange?.from || !dateRange?.to)) {
       toast.error("Por favor selecciona un rango de fechas")
       return
     }
@@ -47,6 +51,30 @@ export function ReportExportDialog({ open, onOpenChange }: ReportExportDialogPro
 
         if (reportType === "sales") {
           result = await generateSalesExcel(dateRange!.from!, dateRange!.to!)
+        } else if (reportType === "analytics") {
+          if (exportFormat === "pdf") {
+            // Generate PDF on client side
+            const dataResult = await getAnalyticsDataForExport(dateRange!.from!, dateRange!.to!)
+            if (!dataResult.success || !dataResult.data) {
+              toast.error(dataResult.error || "Error al obtener datos")
+              return
+            }
+
+            const blob = await pdf(<AnalyticsPDFDocument data={dataResult.data} />).toBlob()
+            const url = window.URL.createObjectURL(blob)
+            const link = document.createElement("a")
+            link.href = url
+            link.download = `reporte-analytics-${format(dateRange!.from!, "yyyyMMdd")}-${format(dateRange!.to!, "yyyyMMdd")}.pdf`
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+            window.URL.revokeObjectURL(url)
+
+            toast.success("Reporte PDF generado exitosamente")
+            onOpenChange(false)
+            return
+          }
+          result = await generateAnalyticsExcel(dateRange!.from!, dateRange!.to!)
         } else {
           result = await generateInventoryExcel()
         }
@@ -95,10 +123,11 @@ export function ReportExportDialog({ open, onOpenChange }: ReportExportDialogPro
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={reportType} onValueChange={(v) => setReportType(v as "sales" | "inventory")}>
-          <TabsList className="grid w-full grid-cols-2">
+        <Tabs value={reportType} onValueChange={(v) => setReportType(v as "sales" | "inventory" | "analytics")}>
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="sales">Ventas</TabsTrigger>
             <TabsTrigger value="inventory">Inventario</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
           <TabsContent value="sales" className="space-y-4 mt-4">
@@ -165,6 +194,84 @@ export function ReportExportDialog({ open, onOpenChange }: ReportExportDialogPro
               </ul>
             </div>
           </TabsContent>
+
+          <TabsContent value="analytics" className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label>Período</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !dateRange && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateRange?.from ? (
+                      dateRange.to ? (
+                        <>
+                          {format(dateRange.from, "dd/MM/yyyy", { locale: es })} -{" "}
+                          {format(dateRange.to, "dd/MM/yyyy", { locale: es })}
+                        </>
+                      ) : (
+                        format(dateRange.from, "dd/MM/yyyy", { locale: es })
+                      )
+                    ) : (
+                      <span>Selecciona un rango de fechas</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    initialFocus
+                    mode="range"
+                    defaultMonth={dateRange?.from}
+                    selected={dateRange}
+                    onSelect={setDateRange}
+                    numberOfMonths={2}
+                    locale={es}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Formato de exportación</Label>
+              <RadioGroup
+                value={exportFormat}
+                onValueChange={(v) => setExportFormat(v as "excel" | "pdf")}
+                className="flex gap-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="excel" id="excel" />
+                  <Label htmlFor="excel" className="flex items-center gap-2 cursor-pointer">
+                    <FileSpreadsheet className="h-4 w-4 text-green-600" />
+                    Excel
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="pdf" id="pdf" />
+                  <Label htmlFor="pdf" className="flex items-center gap-2 cursor-pointer">
+                    <FileText className="h-4 w-4 text-red-600" />
+                    PDF
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            <div className="rounded-lg bg-muted p-4 space-y-2">
+              <h4 className="font-semibold text-sm">El reporte incluirá:</h4>
+              <ul className="text-sm text-muted-foreground space-y-1">
+                <li>• Resumen ejecutivo del período</li>
+                <li>• Ventas por tipo de orden (Mesa, Llevar, Delivery)</li>
+                <li>• Top 20 productos más vendidos</li>
+                <li>• Ventas por categoría</li>
+                {exportFormat === "excel" && <li>• Mapa de calor de horas pico</li>}
+                <li>• Rendimiento del personal</li>
+              </ul>
+            </div>
+          </TabsContent>
         </Tabs>
 
         <DialogFooter>
@@ -176,6 +283,11 @@ export function ReportExportDialog({ open, onOpenChange }: ReportExportDialogPro
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Generando...
+              </>
+            ) : reportType === "analytics" && exportFormat === "pdf" ? (
+              <>
+                <FileText className="h-4 w-4" />
+                Exportar PDF
               </>
             ) : (
               <>

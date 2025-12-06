@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { ReactNode } from "react"
+import { ReactNode, Children, isValidElement, cloneElement } from "react"
 
 interface DashboardGridProps {
   children: ReactNode
@@ -31,15 +31,21 @@ export function DashboardGrid({ children, className }: DashboardGridProps) {
       initial="hidden"
       animate="show"
     >
-      {Array.isArray(children) ? (
-        children.map((child, index) => (
-          <motion.div key={index} variants={item}>
-            {child}
+      {Children.map(children, (child, index) => {
+        // Extract className from child if it exists
+        const childProps = isValidElement(child) ? (child.props as { className?: string }) : {}
+        const childClassName = childProps.className || ''
+
+        return (
+          <motion.div key={index} variants={item} className={childClassName}>
+            {isValidElement(child)
+              ? cloneElement(child, { className: 'h-full w-full' } as any)
+              : child
+            }
           </motion.div>
-        ))
-      ) : (
-        <motion.div variants={item}>{children}</motion.div>
-      )}
+        )
+      })}
     </motion.div>
   )
 }
+
