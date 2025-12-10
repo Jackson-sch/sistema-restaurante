@@ -1,4 +1,5 @@
 import { checkOpenShift, getShiftSummary } from "@/actions/cash-register"
+import { getCashSettings } from "@/actions/settings"
 import { OpenShiftDialog } from "@/components/cash-register/open-shift-dialog"
 import { ShiftDashboard } from "@/components/cash-register/shift-dashboard"
 import { Button } from "@/components/ui/button"
@@ -41,30 +42,39 @@ export default async function CashRegisterPage() {
         )
     }
 
-    // Fetch full summary for the open shift
-    const { data: shiftSummary } = await getShiftSummary(openShift.id)
+    // Fetch full summary and settings for the open shift
+    const [shiftResult, settingsResult] = await Promise.all([
+        getShiftSummary(openShift.id),
+        getCashSettings()
+    ])
 
-    if (!shiftSummary) {
+    if (!shiftResult.data) {
         return <div>Error al cargar información de la caja.</div>
     }
+
+    const shiftSummary = shiftResult.data
+    const tolerance = settingsResult.data?.cashTolerance ?? 5
 
     return (
         <div className="space-y-6">
 
-            <ShiftDashboard shift={{
-                ...shiftSummary,
-                summary: {
-                    ...shiftSummary.summary,
-                    initialCash: shiftSummary.openingCash
-                },
-                openedAt: shiftSummary.openedAt.toISOString(),
-                transactions: shiftSummary.transactions.map(tx => ({
-                    ...tx,
-                    type: tx.type as "INCOME" | "EXPENSE",
-                    reference: tx.reference || undefined,
-                    createdAt: tx.createdAt.toISOString()
-                }))
-            }} />
+            <ShiftDashboard
+                shift={{
+                    ...shiftSummary,
+                    summary: {
+                        ...shiftSummary.summary,
+                        initialCash: shiftSummary.openingCash
+                    },
+                    openedAt: shiftSummary.openedAt.toISOString(),
+                    transactions: shiftSummary.transactions.map(tx => ({
+                        ...tx,
+                        type: tx.type as "INCOME" | "EXPENSE",
+                        reference: tx.reference || undefined,
+                        createdAt: tx.createdAt.toISOString()
+                    }))
+                }}
+                tolerance={tolerance}
+            />
 
 
         </div>

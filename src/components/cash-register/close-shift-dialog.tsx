@@ -45,6 +45,7 @@ interface CloseShiftDialogProps {
     cashRegisterId: string
     expectedCash: number
     summary: ShiftSummary
+    tolerance?: number
 }
 
 const defaultDenominations: DenominationInput = {
@@ -52,7 +53,7 @@ const defaultDenominations: DenominationInput = {
     c5: 0, c2: 0, c1: 0, c050: 0, c020: 0, c010: 0
 }
 
-export function CloseShiftDialog({ cashRegisterId, expectedCash, summary }: CloseShiftDialogProps) {
+export function CloseShiftDialog({ cashRegisterId, expectedCash, summary, tolerance = 5 }: CloseShiftDialogProps) {
     const [open, setOpen] = useState(false)
     const [isPending, startTransition] = useTransition()
     const [step, setStep] = useState<"count" | "confirm">("count")
@@ -209,15 +210,18 @@ export function CloseShiftDialog({ cashRegisterId, expectedCash, summary }: Clos
                                     {closingCash > 0 && (
                                         <div className={cn(
                                             "text-sm flex justify-between p-3 rounded-lg border",
-                                            difference === 0
+                                            Math.abs(difference) <= tolerance
                                                 ? "bg-green-500/10 border-green-500/30 text-green-600"
                                                 : difference > 0
-                                                    ? "bg-blue-500/10 border-blue-500/30 text-blue-600"
+                                                    ? "bg-amber-500/10 border-amber-500/30 text-amber-600"
                                                     : "bg-red-500/10 border-red-500/30 text-red-600"
                                         )}>
                                             <span className="flex items-center gap-2">
-                                                {difference !== 0 && <AlertTriangle className="h-4 w-4" />}
+                                                {Math.abs(difference) > tolerance && <AlertTriangle className="h-4 w-4" />}
                                                 Diferencia:
+                                                {Math.abs(difference) <= tolerance && (
+                                                    <span className="text-xs">(dentro de tolerancia)</span>
+                                                )}
                                             </span>
                                             <span className="font-bold">
                                                 {difference > 0 ? "+" : ""}{formatCurrency(difference)}

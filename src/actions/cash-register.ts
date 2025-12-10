@@ -186,6 +186,9 @@ export async function getShiftSummary(id: string) {
         const shift = await prisma.cashRegister.findUnique({
             where: { id },
             include: {
+                user: {
+                    select: { name: true }
+                },
                 transactions: {
                     orderBy: { createdAt: 'desc' }
                 },
@@ -353,5 +356,53 @@ export async function getShiftHistory({
     } catch (error) {
         console.error("Error fetching shift history:", error)
         return { success: false, error: "Error al obtener historial" }
+    }
+}
+
+export async function getDifferenceStats(limit = 20) {
+    const session = await auth()
+    if (!session?.user?.restaurantId) return { success: false, error: "No autorizado" }
+
+    try {
+        const shifts = await prisma.cashRegister.findMany({
+            where: {
+                user: {
+                    restaurantId: session.user.restaurantId
+                },
+                closedAt: {
+                    not: null
+                },
+                difference: {
+                    not: null
+                }
+            },
+            include: {
+                user: {
+                    select: {
+                        name: true
+                    }
+                }
+            },
+            orderBy: {
+                closedAt: 'desc'
+            },
+            take: limit
+        })
+
+        const data = shifts.map(shift => ({
+            id: shift.id,
+            date: shift.closedAt!,
+            userName: shift.user.name || "Usuario",
+            difference: Number(shift.difference),
+            turn: shift.turn
+        }))
+
+        return {
+            success: true,
+            data
+        }
+    } catch (error) {
+        console.error("Error fetching difference stats:", error)
+        return { success: false, error: "Error al obtener estadísticas" }
     }
 }

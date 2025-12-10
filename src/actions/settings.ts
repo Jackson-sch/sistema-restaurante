@@ -40,3 +40,54 @@ export async function updateRestaurantSettings(data: RestaurantSettingsInput) {
         return { success: false, error: "Error al actualizar configuración" }
     }
 }
+
+export async function updateCashSettings(data: { cashTolerance: number }) {
+    const session = await auth()
+    if (!session?.user?.restaurantId) return { success: false, error: "No autorizado" }
+
+    try {
+        const restaurant = await prisma.restaurant.findUnique({
+            where: { id: session.user.restaurantId },
+            select: { settings: true }
+        })
+
+        const currentSettings = (restaurant?.settings as Record<string, any>) || {}
+        const newSettings = {
+            ...currentSettings,
+            cashTolerance: data.cashTolerance
+        }
+
+        await prisma.restaurant.update({
+            where: { id: session.user.restaurantId },
+            data: { settings: newSettings }
+        })
+
+        revalidatePath("/dashboard/settings")
+        revalidatePath("/dashboard/cash-register")
+        return { success: true }
+    } catch (error) {
+        return { success: false, error: "Error al actualizar configuración de caja" }
+    }
+}
+
+export async function getCashSettings() {
+    const session = await auth()
+    if (!session?.user?.restaurantId) return { success: false, error: "No autorizado" }
+
+    try {
+        const restaurant = await prisma.restaurant.findUnique({
+            where: { id: session.user.restaurantId },
+            select: { settings: true }
+        })
+
+        const settings = (restaurant?.settings as Record<string, any>) || {}
+        return {
+            success: true,
+            data: {
+                cashTolerance: settings.cashTolerance ?? 5
+            }
+        }
+    } catch (error) {
+        return { success: false, error: "Error al obtener configuración de caja" }
+    }
+}

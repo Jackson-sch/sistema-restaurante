@@ -54,9 +54,10 @@ interface ShiftDashboardProps {
         summary: ShiftSummary
         transactions: Transaction[]
     }
+    tolerance?: number
 }
 
-export function ShiftDashboard({ shift }: ShiftDashboardProps) {
+export function ShiftDashboard({ shift, tolerance = 5 }: ShiftDashboardProps) {
     const { summary, transactions } = shift
     const [elapsedTime, setElapsedTime] = useState("")
 
@@ -196,6 +197,7 @@ export function ShiftDashboard({ shift }: ShiftDashboardProps) {
                                     ...summary,
                                     initialCash: summary.currentCash - summary.cashSales - summary.totalIncome + summary.totalExpenses
                                 }}
+                                tolerance={tolerance}
                             />
                         </div>
                     </div>

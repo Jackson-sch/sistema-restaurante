@@ -50,7 +50,7 @@ export default function StatCard({
       </CardHeader>
       <CardContent>
         <div className={cn("text-lg md:text-3xl font-bold", iconColor)}>
-          {value}
+          {value} 
         </div>
         <div className="flex items-center gap-2 mt-1">
           {description && (
