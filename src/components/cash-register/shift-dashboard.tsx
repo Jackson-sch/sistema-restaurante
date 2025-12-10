@@ -40,6 +40,7 @@ interface ShiftSummary {
     totalSales: number
     cashSales: number
     cardSales: number
+    otherSales: number
     totalIncome: number
     totalExpenses: number
     initialCash: number
@@ -94,6 +95,7 @@ export function ShiftDashboard({ shift }: ShiftDashboardProps) {
             description: "",
             cashSales: formatCurrency(summary.cashSales),
             cardSales: formatCurrency(summary.cardSales),
+            otherSales: formatCurrency(summary.otherSales),
         },
         {
             title: "Ingresos",
@@ -187,7 +189,14 @@ export function ShiftDashboard({ shift }: ShiftDashboardProps) {
                                     </Button>
                                 }
                             />
-                            <CloseShiftDialog cashRegisterId={shift.id} expectedCash={summary.currentCash} />
+                            <CloseShiftDialog
+                                cashRegisterId={shift.id}
+                                expectedCash={summary.currentCash}
+                                summary={{
+                                    ...summary,
+                                    initialCash: summary.currentCash - summary.cashSales - summary.totalIncome + summary.totalExpenses
+                                }}
+                            />
                         </div>
                     </div>
                 </CardContent>

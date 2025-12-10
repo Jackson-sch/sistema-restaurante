@@ -12,7 +12,7 @@ interface QuickActionsBarProps {
 
 export function QuickActionsBar({ categories = [], products = [] }: QuickActionsBarProps) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1 md:gap-2">
       {categories.length > 0 && products.length > 0 && (
         <NewOrderButton categories={categories} products={products} />
       )}

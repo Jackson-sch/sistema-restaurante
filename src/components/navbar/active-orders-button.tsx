@@ -28,9 +28,26 @@ export function ActiveOrdersButton() {
 
   useEffect(() => {
     fetchCount()
-    // Refresh count every 30 seconds
-    const interval = setInterval(fetchCount, 30000)
-    return () => clearInterval(interval)
+    // Refresh count every 3 seconds for near real-time updates
+    const interval = setInterval(fetchCount, 3000)
+
+    // Also refresh when window becomes visible again
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchCount()
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    // Instant update when order is created/updated in same tab
+    const handleOrderUpdate = () => fetchCount()
+    window.addEventListener('order-updated', handleOrderUpdate)
+
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('order-updated', handleOrderUpdate)
+    }
   }, [])
 
   return (
@@ -38,7 +55,7 @@ export function ActiveOrdersButton() {
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             className="relative"
             onClick={() => router.push("/dashboard/orders")}
@@ -48,9 +65,9 @@ export function ActiveOrdersButton() {
             {count > 0 && (
               <Badge
                 variant="destructive"
-                className="ml-2 h-5 min-w-5 px-1 text-xs animate-bounce"
+                className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs"
               >
-                {count}
+                {count > 9 ? '9+' : count}
               </Badge>
             )}
           </Button>

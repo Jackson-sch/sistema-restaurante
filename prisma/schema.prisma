@@ -451,6 +451,8 @@ model CashRegister {
   expectedCash Decimal? @db.Decimal(10, 2)
   difference   Decimal? @db.Decimal(10, 2)
 
+  denominationBreakdown Json? // Desglose por billetes/monedas al cierre
+
   notes String?
 
   openedAt DateTime  @default(now())

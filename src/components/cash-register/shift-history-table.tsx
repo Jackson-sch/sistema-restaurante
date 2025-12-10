@@ -75,7 +75,7 @@ export function ShiftHistoryTable({ data }: ShiftHistoryTableProps) {
             cell: ({ row }) => {
                 return (
                     <Button variant="ghost" size="icon" asChild>
-                        <Link href={`/dashboard/cash-register?shiftId=${row.original.id}`}>
+                        <Link href={`/dashboard/cash-register/${row.original.id}`}>
                             <Eye className="h-4 w-4" />
                         </Link>
                     </Button>

@@ -52,21 +52,21 @@ export function CashRegisterButton() {
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               className="relative"
               onClick={handleClick}
             >
-              <DollarSign className="h-5 w-5" />
+              <DollarSign className="h-4 w-4" />
               <span className="ml-2 hidden md:inline">Caja</span>
               {/* Small dot indicator for mobile */}
               <span
-                className={`ml-1 md:hidden h-2 w-2 rounded-full ${isOpen ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}
+                className={`absolute -top-1 -right-1 ml-1 md:hidden h-3 w-3 rounded-full ${isOpen ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}
               />
               {/* Full badge for desktop */}
               <Badge
                 variant={isOpen ? "default" : "secondary"}
-                className="ml-2 h-5 px-2 text-xs hidden md:inline-flex"
+                className="ml-2 h-4 px-1 md:px-2 text-xs hidden md:inline-flex"
               >
                 {isOpen ? "Abierta" : "Cerrada"}
               </Badge>

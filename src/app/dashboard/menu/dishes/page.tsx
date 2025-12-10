@@ -1,14 +1,10 @@
-import { getProducts } from "@/actions/products"
 import { getCategories } from "@/actions/categories"
 import { ProductDialog } from "@/components/menu/product-dialog"
 import { ProductsDataTable } from "@/components/menu/products-data-table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default async function ProductsPage() {
-    const [{ data: products }, { data: categories }] = await Promise.all([
-        getProducts(),
-        getCategories()
-    ])
+    const { data: categories } = await getCategories()
 
     return (
         <div className="space-y-4">
@@ -23,7 +19,6 @@ export default async function ProductsPage() {
                 </CardHeader>
                 <CardContent>
                     <ProductsDataTable
-                        data={products || []}
                         categories={categories || []}
                     />
                 </CardContent>

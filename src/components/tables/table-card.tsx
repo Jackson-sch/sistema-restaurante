@@ -329,7 +329,7 @@ export function TableCard({ table, onViewOrders, onUpdate, onQuickOrder }: Table
                             <Clock className="h-4 w-4 mr-2" />
                             Sin órdenes activas
                         </div>
-                        {table.status === "AVAILABLE" && onQuickOrder && (
+                        {(table.status === "AVAILABLE" || table.status === "RESERVED") && onQuickOrder && (
                             <Button
                                 onClick={(e) => {
                                     e.stopPropagation()
@@ -340,7 +340,7 @@ export function TableCard({ table, onViewOrders, onUpdate, onQuickOrder }: Table
                                 variant="default"
                             >
                                 <Plus className="h-4 w-4 mr-2" />
-                                Nuevo Pedido
+                                {table.status === "RESERVED" ? "Ocupar (Llegada)" : "Nuevo Pedido"}
                             </Button>
                         )}
                     </div>

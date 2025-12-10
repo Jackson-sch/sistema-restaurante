@@ -1,5 +1,5 @@
 import { getDashboardStats } from "@/actions/dashboard"
-import { StatCard } from "@/components/dashboard/stat-card"
+import { StatCard } from "@/components/stat-card"
 import { DateRangeFilter } from "@/components/dashboard/date-range-filter"
 import { AlertsPanel } from "@/components/dashboard/alerts-panel"
 import { BarChart } from "@/components/dashboard/charts/bar-chart"

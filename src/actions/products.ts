@@ -29,6 +29,79 @@ export async function getProducts(): Promise<{ success: boolean; data?: ProductW
     }
 }
 
+export async function getProductsPaginated({
+    page = 1,
+    limit = 10,
+    search,
+    categoryId,
+}: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    categoryId?: string;
+}) {
+    try {
+        const skip = (page - 1) * limit;
+
+        const where: any = {};
+
+        if (search) {
+            where.OR = [
+                { name: { contains: search, mode: 'insensitive' } },
+                { description: { contains: search, mode: 'insensitive' } },
+                { sku: { contains: search, mode: 'insensitive' } },
+            ];
+        }
+
+        if (categoryId) {
+            where.categoryId = categoryId;
+        }
+
+        const [products, total] = await Promise.all([
+            prisma.product.findMany({
+                where,
+                skip,
+                take: limit,
+                orderBy: { createdAt: "desc" },
+                include: { category: true }
+            }),
+            prisma.product.count({ where })
+        ]);
+
+        const serializedProducts = products.map(product => ({
+            ...product,
+            price: Number(product.price),
+            cost: product.cost ? Number(product.cost) : null,
+            preparationTime: product.preparationTime ? Number(product.preparationTime) : null,
+        }));
+
+        const totalPages = Math.ceil(total / limit);
+
+        return {
+            success: true,
+            data: serializedProducts,
+            meta: {
+                total,
+                page,
+                limit,
+                totalPages,
+            }
+        };
+    } catch (error) {
+        return {
+            success: false,
+            data: [],
+            meta: {
+                total: 0,
+                page: 1,
+                limit: 10,
+                totalPages: 0,
+            },
+            error: "Error al obtener productos"
+        };
+    }
+}
+
 export async function createProduct(data: ProductInput) {
     try {
         await requirePermission(PERMISSIONS.PRODUCTS_CREATE)

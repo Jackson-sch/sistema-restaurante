@@ -1,18 +1,20 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
-import { Banknote, CreditCard, LucideIcon } from "lucide-react"
+import { Banknote, CreditCard, LucideIcon, Smartphone } from "lucide-react"
 import { ComparisonBadge } from "@/components/dashboard/comparison-badge"
 
 interface StatCardProps {
   title: string
-  description: string
+  description?: string
   value: string | number
   icon: LucideIcon
   iconColor?: string
+  iconBgColor?: string
   className?: string
   comparison?: number
   cashSales?: string
   cardSales?: string
+  otherSales?: string
 }
 
 export default function StatCard({
@@ -21,10 +23,12 @@ export default function StatCard({
   value,
   icon: Icon,
   iconColor = "text-muted-foreground",
+  iconBgColor,
   className = "",
   comparison,
   cashSales,
   cardSales,
+  otherSales,
 }: StatCardProps) {
   return (
     <Card className={cn("border-border/50 hover:shadow-lg transition-shadow",
@@ -36,10 +40,16 @@ export default function StatCard({
     )}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className={`h-4 w-4 ${iconColor}`} />
+        {iconBgColor ? (
+          <div className={cn("p-2 rounded-lg", iconBgColor)}>
+            <Icon className={cn("h-4 w-4", iconColor)} />
+          </div>
+        ) : (
+          <Icon className={cn("h-4 w-4", iconColor)} />
+        )}
       </CardHeader>
       <CardContent>
-        <div className={`text-lg md:text-3xl font-bold ${iconColor}`}>
+        <div className={cn("text-lg md:text-3xl font-bold", iconColor)}>
           {value}
         </div>
         <div className="flex items-center gap-2 mt-1">
@@ -49,16 +59,25 @@ export default function StatCard({
           {comparison !== undefined && (
             <ComparisonBadge value={comparison} />
           )}
-          {cashSales !== undefined && (
-            <span className="flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-xs">
-              <Banknote className="h-3 w-3" />{cashSales}</span>
-          )}
-          {cardSales !== undefined && (
-            <span className="flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-xs">
-              <CreditCard className="h-3 w-3" />{cardSales}</span>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            {cashSales !== undefined && (
+              <span className="flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-xs font-mono">
+                <Banknote className="h-3 w-3" />{cashSales}</span>
+            )}
+            {cardSales !== undefined && (
+              <span className="flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-xs font-mono">
+                <CreditCard className="h-3 w-3" />{cardSales}</span>
+            )}
+            {otherSales !== undefined && (
+              <span className="flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-xs font-mono">
+                <Smartphone className="h-3 w-3" />{otherSales}</span>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
   )
 }
+
+// Named export for compatibility
+export { StatCard }

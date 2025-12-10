@@ -15,7 +15,10 @@ import {
   Grid,
   Wallet,
   BarChart,
-  TrendingUp
+  TrendingUp,
+  CalendarDays,
+  Percent,
+  Package
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -113,6 +116,10 @@ const data = {
           url: "/dashboard/tables/map",
         },
         {
+          title: "Reservaciones",
+          url: "/dashboard/reservations",
+        },
+        {
           title: "Zonas",
           url: "/dashboard/zones",
         },
@@ -127,6 +134,16 @@ const data = {
       title: "Reportes",
       url: "/dashboard/reports",
       icon: BarChart,
+    },
+    {
+      title: "Descuentos",
+      url: "/dashboard/discounts",
+      icon: Percent,
+    },
+    {
+      title: "Combos",
+      url: "/dashboard/combos",
+      icon: Package,
     },
     {
       title: "Inventario",

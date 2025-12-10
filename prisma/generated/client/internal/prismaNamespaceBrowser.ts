@@ -437,6 +437,7 @@ export const CashRegisterScalarFieldEnum = {
   closingCash: 'closingCash',
   expectedCash: 'expectedCash',
   difference: 'difference',
+  denominationBreakdown: 'denominationBreakdown',
   notes: 'notes',
   openedAt: 'openedAt',
   closedAt: 'closedAt'

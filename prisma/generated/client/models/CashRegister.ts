@@ -74,6 +74,7 @@ export type CashRegisterCountAggregateOutputType = {
   closingCash: number
   expectedCash: number
   difference: number
+  denominationBreakdown: number
   notes: number
   openedAt: number
   closedAt: number
@@ -129,6 +130,7 @@ export type CashRegisterCountAggregateInputType = {
   closingCash?: true
   expectedCash?: true
   difference?: true
+  denominationBreakdown?: true
   notes?: true
   openedAt?: true
   closedAt?: true
@@ -229,6 +231,7 @@ export type CashRegisterGroupByOutputType = {
   closingCash: runtime.Decimal | null
   expectedCash: runtime.Decimal | null
   difference: runtime.Decimal | null
+  denominationBreakdown: runtime.JsonValue | null
   notes: string | null
   openedAt: Date
   closedAt: Date | null
@@ -265,6 +268,7 @@ export type CashRegisterWhereInput = {
   closingCash?: Prisma.DecimalNullableFilter<"CashRegister"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   expectedCash?: Prisma.DecimalNullableFilter<"CashRegister"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   difference?: Prisma.DecimalNullableFilter<"CashRegister"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  denominationBreakdown?: Prisma.JsonNullableFilter<"CashRegister">
   notes?: Prisma.StringNullableFilter<"CashRegister"> | string | null
   openedAt?: Prisma.DateTimeFilter<"CashRegister"> | Date | string
   closedAt?: Prisma.DateTimeNullableFilter<"CashRegister"> | Date | string | null
@@ -281,6 +285,7 @@ export type CashRegisterOrderByWithRelationInput = {
   closingCash?: Prisma.SortOrderInput | Prisma.SortOrder
   expectedCash?: Prisma.SortOrderInput | Prisma.SortOrder
   difference?: Prisma.SortOrderInput | Prisma.SortOrder
+  denominationBreakdown?: Prisma.SortOrderInput | Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
   openedAt?: Prisma.SortOrder
   closedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -300,6 +305,7 @@ export type CashRegisterWhereUniqueInput = Prisma.AtLeast<{
   closingCash?: Prisma.DecimalNullableFilter<"CashRegister"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   expectedCash?: Prisma.DecimalNullableFilter<"CashRegister"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   difference?: Prisma.DecimalNullableFilter<"CashRegister"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  denominationBreakdown?: Prisma.JsonNullableFilter<"CashRegister">
   notes?: Prisma.StringNullableFilter<"CashRegister"> | string | null
   openedAt?: Prisma.DateTimeFilter<"CashRegister"> | Date | string
   closedAt?: Prisma.DateTimeNullableFilter<"CashRegister"> | Date | string | null
@@ -316,6 +322,7 @@ export type CashRegisterOrderByWithAggregationInput = {
   closingCash?: Prisma.SortOrderInput | Prisma.SortOrder
   expectedCash?: Prisma.SortOrderInput | Prisma.SortOrder
   difference?: Prisma.SortOrderInput | Prisma.SortOrder
+  denominationBreakdown?: Prisma.SortOrderInput | Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
   openedAt?: Prisma.SortOrder
   closedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -337,6 +344,7 @@ export type CashRegisterScalarWhereWithAggregatesInput = {
   closingCash?: Prisma.DecimalNullableWithAggregatesFilter<"CashRegister"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   expectedCash?: Prisma.DecimalNullableWithAggregatesFilter<"CashRegister"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   difference?: Prisma.DecimalNullableWithAggregatesFilter<"CashRegister"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  denominationBreakdown?: Prisma.JsonNullableWithAggregatesFilter<"CashRegister">
   notes?: Prisma.StringNullableWithAggregatesFilter<"CashRegister"> | string | null
   openedAt?: Prisma.DateTimeWithAggregatesFilter<"CashRegister"> | Date | string
   closedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"CashRegister"> | Date | string | null
@@ -349,6 +357,7 @@ export type CashRegisterCreateInput = {
   closingCash?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   expectedCash?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   difference?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  denominationBreakdown?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   notes?: string | null
   openedAt?: Date | string
   closedAt?: Date | string | null
@@ -365,6 +374,7 @@ export type CashRegisterUncheckedCreateInput = {
   closingCash?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   expectedCash?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   difference?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  denominationBreakdown?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   notes?: string | null
   openedAt?: Date | string
   closedAt?: Date | string | null
@@ -379,6 +389,7 @@ export type CashRegisterUpdateInput = {
   closingCash?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   expectedCash?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   difference?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  denominationBreakdown?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -395,6 +406,7 @@ export type CashRegisterUncheckedUpdateInput = {
   closingCash?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   expectedCash?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   difference?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  denominationBreakdown?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -410,6 +422,7 @@ export type CashRegisterCreateManyInput = {
   closingCash?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   expectedCash?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   difference?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  denominationBreakdown?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   notes?: string | null
   openedAt?: Date | string
   closedAt?: Date | string | null
@@ -422,6 +435,7 @@ export type CashRegisterUpdateManyMutationInput = {
   closingCash?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   expectedCash?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   difference?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  denominationBreakdown?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -435,6 +449,7 @@ export type CashRegisterUncheckedUpdateManyInput = {
   closingCash?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   expectedCash?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   difference?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  denominationBreakdown?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -463,6 +478,7 @@ export type CashRegisterCountOrderByAggregateInput = {
   closingCash?: Prisma.SortOrder
   expectedCash?: Prisma.SortOrder
   difference?: Prisma.SortOrder
+  denominationBreakdown?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   openedAt?: Prisma.SortOrder
   closedAt?: Prisma.SortOrder
@@ -592,6 +608,7 @@ export type CashRegisterCreateWithoutUserInput = {
   closingCash?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   expectedCash?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   difference?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  denominationBreakdown?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   notes?: string | null
   openedAt?: Date | string
   closedAt?: Date | string | null
@@ -606,6 +623,7 @@ export type CashRegisterUncheckedCreateWithoutUserInput = {
   closingCash?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   expectedCash?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   difference?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  denominationBreakdown?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   notes?: string | null
   openedAt?: Date | string
   closedAt?: Date | string | null
@@ -650,6 +668,7 @@ export type CashRegisterScalarWhereInput = {
   closingCash?: Prisma.DecimalNullableFilter<"CashRegister"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   expectedCash?: Prisma.DecimalNullableFilter<"CashRegister"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   difference?: Prisma.DecimalNullableFilter<"CashRegister"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  denominationBreakdown?: Prisma.JsonNullableFilter<"CashRegister">
   notes?: Prisma.StringNullableFilter<"CashRegister"> | string | null
   openedAt?: Prisma.DateTimeFilter<"CashRegister"> | Date | string
   closedAt?: Prisma.DateTimeNullableFilter<"CashRegister"> | Date | string | null
@@ -662,6 +681,7 @@ export type CashRegisterCreateWithoutOrdersInput = {
   closingCash?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   expectedCash?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   difference?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  denominationBreakdown?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   notes?: string | null
   openedAt?: Date | string
   closedAt?: Date | string | null
@@ -677,6 +697,7 @@ export type CashRegisterUncheckedCreateWithoutOrdersInput = {
   closingCash?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   expectedCash?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   difference?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  denominationBreakdown?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   notes?: string | null
   openedAt?: Date | string
   closedAt?: Date | string | null
@@ -706,6 +727,7 @@ export type CashRegisterUpdateWithoutOrdersInput = {
   closingCash?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   expectedCash?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   difference?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  denominationBreakdown?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -721,6 +743,7 @@ export type CashRegisterUncheckedUpdateWithoutOrdersInput = {
   closingCash?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   expectedCash?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   difference?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  denominationBreakdown?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -734,6 +757,7 @@ export type CashRegisterCreateWithoutTransactionsInput = {
   closingCash?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   expectedCash?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   difference?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  denominationBreakdown?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   notes?: string | null
   openedAt?: Date | string
   closedAt?: Date | string | null
@@ -749,6 +773,7 @@ export type CashRegisterUncheckedCreateWithoutTransactionsInput = {
   closingCash?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   expectedCash?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   difference?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  denominationBreakdown?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   notes?: string | null
   openedAt?: Date | string
   closedAt?: Date | string | null
@@ -778,6 +803,7 @@ export type CashRegisterUpdateWithoutTransactionsInput = {
   closingCash?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   expectedCash?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   difference?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  denominationBreakdown?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -793,6 +819,7 @@ export type CashRegisterUncheckedUpdateWithoutTransactionsInput = {
   closingCash?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   expectedCash?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   difference?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  denominationBreakdown?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -806,6 +833,7 @@ export type CashRegisterCreateManyUserInput = {
   closingCash?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   expectedCash?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   difference?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  denominationBreakdown?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   notes?: string | null
   openedAt?: Date | string
   closedAt?: Date | string | null
@@ -818,6 +846,7 @@ export type CashRegisterUpdateWithoutUserInput = {
   closingCash?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   expectedCash?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   difference?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  denominationBreakdown?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -832,6 +861,7 @@ export type CashRegisterUncheckedUpdateWithoutUserInput = {
   closingCash?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   expectedCash?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   difference?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  denominationBreakdown?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -846,6 +876,7 @@ export type CashRegisterUncheckedUpdateManyWithoutUserInput = {
   closingCash?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   expectedCash?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   difference?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  denominationBreakdown?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -899,6 +930,7 @@ export type CashRegisterSelect<ExtArgs extends runtime.Types.Extensions.Internal
   closingCash?: boolean
   expectedCash?: boolean
   difference?: boolean
+  denominationBreakdown?: boolean
   notes?: boolean
   openedAt?: boolean
   closedAt?: boolean
@@ -916,6 +948,7 @@ export type CashRegisterSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   closingCash?: boolean
   expectedCash?: boolean
   difference?: boolean
+  denominationBreakdown?: boolean
   notes?: boolean
   openedAt?: boolean
   closedAt?: boolean
@@ -930,6 +963,7 @@ export type CashRegisterSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   closingCash?: boolean
   expectedCash?: boolean
   difference?: boolean
+  denominationBreakdown?: boolean
   notes?: boolean
   openedAt?: boolean
   closedAt?: boolean
@@ -944,12 +978,13 @@ export type CashRegisterSelectScalar = {
   closingCash?: boolean
   expectedCash?: boolean
   difference?: boolean
+  denominationBreakdown?: boolean
   notes?: boolean
   openedAt?: boolean
   closedAt?: boolean
 }
 
-export type CashRegisterOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "turn" | "openingCash" | "closingCash" | "expectedCash" | "difference" | "notes" | "openedAt" | "closedAt", ExtArgs["result"]["cashRegister"]>
+export type CashRegisterOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "turn" | "openingCash" | "closingCash" | "expectedCash" | "difference" | "denominationBreakdown" | "notes" | "openedAt" | "closedAt", ExtArgs["result"]["cashRegister"]>
 export type CashRegisterInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   orders?: boolean | Prisma.CashRegister$ordersArgs<ExtArgs>
@@ -978,6 +1013,7 @@ export type $CashRegisterPayload<ExtArgs extends runtime.Types.Extensions.Intern
     closingCash: runtime.Decimal | null
     expectedCash: runtime.Decimal | null
     difference: runtime.Decimal | null
+    denominationBreakdown: runtime.JsonValue | null
     notes: string | null
     openedAt: Date
     closedAt: Date | null
@@ -1414,6 +1450,7 @@ export interface CashRegisterFieldRefs {
   readonly closingCash: Prisma.FieldRef<"CashRegister", 'Decimal'>
   readonly expectedCash: Prisma.FieldRef<"CashRegister", 'Decimal'>
   readonly difference: Prisma.FieldRef<"CashRegister", 'Decimal'>
+  readonly denominationBreakdown: Prisma.FieldRef<"CashRegister", 'Json'>
   readonly notes: Prisma.FieldRef<"CashRegister", 'String'>
   readonly openedAt: Prisma.FieldRef<"CashRegister", 'DateTime'>
   readonly closedAt: Prisma.FieldRef<"CashRegister", 'DateTime'>

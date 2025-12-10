@@ -239,22 +239,34 @@ export async function registerPayment(data: {
         });
 
         // Actualizar el estado de pago de la orden y asignar caja
+        const isOrderCompleted = paymentStatus === 'PAID' && order.status === 'SERVED';
+
         await prisma.order.update({
             where: { id: data.orderId },
             data: {
                 paymentStatus,
                 cashRegisterId: openShift.id,
                 // Si el pago está completo y la orden está servida, marcarla como completada
-                ...(paymentStatus === 'PAID' && order.status === 'SERVED'
+                ...(isOrderCompleted
                     ? { status: 'COMPLETED', completedAt: new Date() }
                     : {}),
             },
         });
 
+        // Liberar la mesa si la orden se completó
+        if (isOrderCompleted && order.tableId) {
+            await prisma.table.update({
+                where: { id: order.tableId },
+                data: { status: 'AVAILABLE' }
+            });
+        }
+
         revalidatePath('/dashboard/orders');
         revalidatePath('/dashboard/payments');
         revalidatePath(`/dashboard/orders/${data.orderId}`);
         revalidatePath('/dashboard/cash-register');
+        revalidatePath('/dashboard/tables');
+        revalidatePath('/dashboard/zones');
 
         return {
             success: true,

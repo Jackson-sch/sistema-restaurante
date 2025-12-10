@@ -23,9 +23,10 @@ import { Textarea } from "@/components/ui/textarea"
 import { registerPayment } from "@/actions/payments"
 import { getReceiptSeries } from "@/actions/receipt-series"
 import { getReceiptData } from "@/actions/receipts"
+import { applyDiscountToOrder } from "@/actions/discounts"
 import { formatCurrency } from "@/lib/utils"
 import { toast } from "sonner"
-import { CreditCard, Banknote, Smartphone, Building2, ArrowLeftRight, Loader2 } from "lucide-react"
+import { CreditCard, Banknote, Smartphone, Building2, ArrowLeftRight, Loader2, Tag } from "lucide-react"
 import { ReceiptPreview } from "@/components/receipts/receipt-preview"
 import type { ReceiptData } from "@/types/receipt"
 
@@ -60,7 +61,12 @@ export function UnifiedPaymentDialog({
   const [loading, setLoading] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState("CASH")
   const [receiptType, setReceiptType] = useState("NOTA_VENTA")
+
+  // Amount state
+  const [currentTotal, setCurrentTotal] = useState(totalAmount)
   const [amountReceived, setAmountReceived] = useState(totalAmount.toString())
+
+  // Customer
   const [customerDoc, setCustomerDoc] = useState("")
   const [customerName, setCustomerName] = useState("")
   const [customerAddress, setCustomerAddress] = useState("")
@@ -69,6 +75,11 @@ export function UnifiedPaymentDialog({
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null)
   const [seriesList, setSeriesList] = useState<any[]>([])
 
+  // Discount state
+  const [discountCode, setDiscountCode] = useState("")
+  const [isApplyingDiscount, setIsApplyingDiscount] = useState(false)
+  const [appliedDiscount, setAppliedDiscount] = useState<{ amount: number } | null>(null)
+
   // Receipt preview state
   const [receiptData, setReceiptData] = useState<ReceiptData | null>(null)
   const [showReceipt, setShowReceipt] = useState(false)
@@ -76,6 +87,7 @@ export function UnifiedPaymentDialog({
   // Reset form when dialog opens
   useEffect(() => {
     if (open) {
+      setCurrentTotal(totalAmount)
       setAmountReceived(totalAmount.toString())
       setPaymentMethod("CASH")
       setReceiptType("NOTA_VENTA")
@@ -86,6 +98,8 @@ export function UnifiedPaymentDialog({
       setNotes("")
       setReceiptData(null)
       setShowReceipt(false)
+      setDiscountCode("")
+      setAppliedDiscount(null)
     }
   }, [open, totalAmount])
 
@@ -104,7 +118,7 @@ export function UnifiedPaymentDialog({
 
   // Auto-fill customer data and fetch receipt series preview
   useEffect(() => {
-    if (receiptType === "NOTA_VENTA" || receiptType === "TICKET") {
+    if (receiptType === "NOTA_VENTA") {
       setCustomerDoc("00000000")
       setCustomerName("Publico General")
       setCustomerAddress("")
@@ -115,7 +129,13 @@ export function UnifiedPaymentDialog({
 
     // Get series preview
     if (seriesList.length > 0) {
-      const series = seriesList.find(s => s.type === receiptType && s.active)
+      let series = seriesList.find(s => s.type === receiptType && s.active)
+
+      // Fallback: If NOTA_VENTA selected but no series found, try TICKET series
+      if (!series && receiptType === "NOTA_VENTA") {
+        series = seriesList.find(s => s.type === "TICKET" && s.active)
+      }
+
       if (series) {
         const nextNumber = series.currentNumber + 1
         setReceiptPreview(`${series.series}-${nextNumber.toString().padStart(8, '0')}`)
@@ -125,10 +145,32 @@ export function UnifiedPaymentDialog({
     }
   }, [receiptType, seriesList])
 
-  const change = Number(amountReceived) - totalAmount
+  const change = Number(amountReceived) - currentTotal
+
+  const handleApplyDiscount = async () => {
+    if (!discountCode.trim()) return
+
+    setIsApplyingDiscount(true)
+    try {
+      const result = await applyDiscountToOrder(orderId, discountCode)
+      if (result.success && result.data) {
+        toast.success(`Descuento aplicado: -${formatCurrency(result.data.discountAmount)}`)
+        setAppliedDiscount({ amount: result.data.discountAmount })
+        setCurrentTotal(result.data.newTotal)
+        setAmountReceived(result.data.newTotal.toString()) // Auto-update received amount
+        setDiscountCode("") // Clear input
+      } else {
+        toast.error(result.error || "Error al aplicar descuento")
+      }
+    } catch (error) {
+      toast.error("Error al aplicar descuento")
+    } finally {
+      setIsApplyingDiscount(false)
+    }
+  }
 
   const handleSubmit = async () => {
-    if (Number(amountReceived) < totalAmount) {
+    if (Number(amountReceived) < currentTotal) {
       toast.error("El monto recibido debe ser mayor o igual al total")
       return
     }
@@ -149,7 +191,7 @@ export function UnifiedPaymentDialog({
       const result = await registerPayment({
         orderId,
         method: paymentMethod,
-        amount: totalAmount,
+        amount: currentTotal, // Use the potentially discounted total
         receiptType,
         receiptNumber: receiptPreview || undefined,
         customerDoc: customerDoc || undefined,
@@ -158,6 +200,8 @@ export function UnifiedPaymentDialog({
         reference: reference || undefined,
         notes: notes || undefined
       })
+
+      // ... (rest of handling)
 
       if (result.success) {
         toast.success(
@@ -179,6 +223,11 @@ export function UnifiedPaymentDialog({
 
         // No receipt to show, complete
         onOpenChange(false)
+
+        // Dispatch events for instant navbar updates
+        window.dispatchEvent(new CustomEvent('payment-updated'))
+        window.dispatchEvent(new CustomEvent('order-updated'))
+
         onSuccess?.()
       } else {
         toast.error(result.error || "Error al procesar el pago")
@@ -194,6 +243,11 @@ export function UnifiedPaymentDialog({
     setShowReceipt(false)
     setReceiptData(null)
     onOpenChange(false)
+
+    // Dispatch events for instant navbar updates
+    window.dispatchEvent(new CustomEvent('payment-updated'))
+    window.dispatchEvent(new CustomEvent('order-updated'))
+
     onSuccess?.()
   }
 
@@ -210,6 +264,42 @@ export function UnifiedPaymentDialog({
           </DialogHeader>
 
           <div className="space-y-4">
+            {/* Discount Section */}
+            {!appliedDiscount ? (
+              <div className="flex gap-2 items-end">
+                <div className="grid w-full gap-2">
+                  <Label htmlFor="discountCode">Cupón de Descuento</Label>
+                  <Input
+                    id="discountCode"
+                    placeholder="INGRESAR CÓDIGO"
+                    value={discountCode}
+                    onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
+                    disabled={isApplyingDiscount}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleApplyDiscount}
+                  disabled={!discountCode || isApplyingDiscount}
+                >
+                  {isApplyingDiscount ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Aplicar"
+                  )}
+                </Button>
+              </div>
+            ) : (
+              <div className="bg-green-50 border border-green-200 rounded-md p-3 flex items-center justify-between text-green-700">
+                <div className="flex items-center gap-2">
+                  <Tag className="h-4 w-4" />
+                  <span className="font-medium">Descuento aplicado</span>
+                </div>
+                <span className="font-bold">-{formatCurrency(appliedDiscount.amount)}</span>
+              </div>
+            )}
+
             {/* Payment Method */}
             <div className="space-y-2">
               <Label>Método de Pago *</Label>
@@ -240,15 +330,18 @@ export function UnifiedPaymentDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="NOTA_VENTA">Nota de Venta (Ticket)</SelectItem>
-                  <SelectItem value="TICKET">Ticket</SelectItem>
+                  <SelectItem value="NOTA_VENTA">Nota de Venta</SelectItem>
                   <SelectItem value="BOLETA">Boleta</SelectItem>
                   <SelectItem value="FACTURA">Factura</SelectItem>
                 </SelectContent>
               </Select>
-              {receiptPreview && (
+              {receiptPreview ? (
                 <p className="text-sm text-muted-foreground">
-                  Número de comprobante: <span className="font-semibold">{receiptPreview}</span>
+                  Número: <span className="font-semibold">{receiptPreview}</span>
+                </p>
+              ) : (
+                <p className="text-sm text-destructive font-medium">
+                  ⚠ No hay serie activa configurada para {receiptType}
                 </p>
               )}
             </div>

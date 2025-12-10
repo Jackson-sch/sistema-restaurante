@@ -143,6 +143,9 @@ export async function closeShift(id: string, data: CloseShiftInput) {
                 expectedCash,
                 difference,
                 closedAt: new Date(),
+                denominationBreakdown: validated.useDenominations && validated.denominations
+                    ? validated.denominations
+                    : undefined,
                 notes: validated.notes ? `${shift.notes || ''}\nCierre: ${validated.notes}` : shift.notes
             }
         })

@@ -7,7 +7,7 @@ import { getPaymentHistory } from '@/actions/payments';
 import { getReceiptData } from '@/actions/receipts';
 import { ReceiptPreview } from '@/components/receipts/receipt-preview';
 import { ReceiptData } from '@/types/receipt';
-import { useQueryStates, parseAsString } from 'nuqs';
+import { useQueryStates, parseAsString, parseAsInteger } from 'nuqs';
 import {
     Select,
     SelectContent,
@@ -21,21 +21,43 @@ export function PaymentHistory() {
     const [loading, setLoading] = React.useState(true);
     const [receiptData, setReceiptData] = React.useState<ReceiptData | null>(null);
     const [showReceipt, setShowReceipt] = React.useState(false);
+    const [totalPages, setTotalPages] = React.useState(1);
+    const [searchValue, setSearchValue] = React.useState('');
 
     const [params, setParams] = useQueryStates({
         method: parseAsString.withDefault('ALL'),
+        page: parseAsInteger.withDefault(1),
+        pageSize: parseAsInteger.withDefault(10),
     });
+
+    const loadPayments = React.useCallback(async () => {
+        setLoading(true);
+        const result = await getPaymentHistory({
+            page: params.page,
+            limit: params.pageSize,
+            method: params.method !== 'ALL' ? params.method : undefined,
+            search: searchValue || undefined,
+        });
+        setPayments(result.data);
+        setTotalPages(result.meta.totalPages);
+        setLoading(false);
+    }, [params.page, params.pageSize, params.method, searchValue]);
 
     React.useEffect(() => {
         loadPayments();
-    }, []);
+    }, [loadPayments]);
 
-    const loadPayments = async () => {
-        setLoading(true);
-        const result = await getPaymentHistory({ page: 1, limit: 100 });
-        setPayments(result.data);
-        setLoading(false);
-    };
+    // Debounce search
+    React.useEffect(() => {
+        const timer = setTimeout(() => {
+            if (params.page !== 1) {
+                setParams({ page: 1 }); // Reset to page 1 on search
+            } else {
+                loadPayments();
+            }
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [searchValue]);
 
     const handleReprint = async (paymentId: string) => {
         const receipt = await getReceiptData(paymentId);
@@ -47,23 +69,12 @@ export function PaymentHistory() {
 
     const columns = createPaymentColumns(handleReprint);
 
-    // Filter payments by method
-    const filteredPayments = React.useMemo(() => {
-        if (params.method === "ALL") return payments;
-        return payments.filter((payment) => payment.method === params.method);
-    }, [payments, params.method]);
-
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center p-8">
-                <p className="text-muted-foreground">Cargando historial...</p>
-            </div>
-        );
-    }
-
     // Filter component for payment method
     const filterComponent = (
-        <Select value={params.method} onValueChange={(value) => setParams({ method: value })}>
+        <Select
+            value={params.method}
+            onValueChange={(value) => setParams({ method: value, page: 1 })}
+        >
             <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="Método de pago" />
             </SelectTrigger>
@@ -83,10 +94,15 @@ export function PaymentHistory() {
         <>
             <DataTable
                 columns={columns}
-                data={filteredPayments}
-                searchKey="order.orderNumber"
+                data={payments}
                 searchPlaceholder="Buscar por número de orden..."
                 filterComponent={filterComponent}
+                searchValue={searchValue}
+                onSearchChange={setSearchValue}
+                pageCount={totalPages}
+                currentPage={params.page}
+                onPageChange={(page) => setParams({ page })}
+                onPageSizeChange={(pageSize) => setParams({ pageSize, page: 1 })}
             />
 
             <ReceiptPreview

@@ -18,7 +18,9 @@ import {
     HandPlatter,
     UtensilsCrossedIcon,
     Croissant,
+    Package,
 } from "lucide-react"
+import { getCombos } from "@/actions/combos"
 import { ProductGrid } from "./product-grid"
 import { OrderCart } from "./order-cart"
 import type { CartItem } from "@/types/order"
@@ -91,6 +93,46 @@ export function OrderInterface({ categories, products, tables, preselectedTable,
         email: '',
         deliveryAddress: ''
     })
+
+    // Combos State
+    const [combos, setCombos] = useState<any[]>([])
+
+    useEffect(() => {
+        // Fetch combos on mount
+        getCombos().then(res => {
+            if (res.success && res.data) setCombos(res.data)
+        })
+    }, [])
+
+    const addComboToCart = (combo: any) => {
+        const totalNormalPrice = combo.products.reduce((sum: number, p: any) => sum + Number(p.product.price) * p.quantity, 0);
+
+        combo.products.forEach((cp: any) => {
+            const product = cp.product;
+            let adjustedPrice = Number(product.price);
+
+            if (totalNormalPrice > 0) {
+                // Formula: (IndividualPrice * ComboPrice) / TotalNormalPrice
+                adjustedPrice = (Number(product.price) * combo.price) / totalNormalPrice;
+            }
+
+            // Mock product with adjusted price
+            const mockedProduct = {
+                ...product,
+                price: adjustedPrice,
+                variants: [],
+                modifierGroups: []
+            }
+
+            addToCart({
+                tempId: crypto.randomUUID(),
+                product: mockedProduct,
+                quantity: cp.quantity,
+                modifiers: [],
+                notes: `(Combo: ${combo.name})`
+            })
+        })
+    }
 
     // Initialize selectedTable with preselectedTable if provided
     const [selectedTable, setSelectedTable] = useState<TableData | null>(() => {
@@ -203,6 +245,19 @@ export function OrderInterface({ categories, products, tables, preselectedTable,
                         <span className="text-[9px] md:text-[10px] font-medium">Todos</span>
                     </button>
 
+                    <button
+                        onClick={() => setSelectedCategory("combos")}
+                        className={cn(
+                            "group flex flex-col items-center justify-center gap-0.5 md:gap-1 p-2 md:p-3 rounded-xl md:rounded-2xl transition-all duration-200",
+                            selectedCategory === "combos"
+                                ? "bg-primary/10 text-primary"
+                                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                        )}
+                    >
+                        <Package className="h-5 w-5 md:h-6 md:w-6" />
+                        <span className="text-[9px] md:text-[10px] font-medium">Combos</span>
+                    </button>
+
                     {categories.map((cat) => {
                         const Icon = getCategoryIcon(cat.name)
                         return (
@@ -258,7 +313,45 @@ export function OrderInterface({ categories, products, tables, preselectedTable,
                 <div className="flex-1 overflow-hidden p-3 md:p-6 pt-2">
                     <ScrollArea className="h-full pr-4 -mr-4">
                         <div className="pb-20">
-                            <ProductGrid products={filteredProducts} onAddToCart={addToCart} />
+
+                            {selectedCategory === 'combos' ? (
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+                                    {combos.filter(c => c.active && c.name.toLowerCase().includes(searchQuery.toLowerCase())).map(combo => (
+                                        <div
+                                            key={combo.id}
+                                            onClick={() => addComboToCart(combo)}
+                                            className="group relative flex flex-col overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm transition-all hover:scale-[1.02] hover:shadow-md cursor-pointer active:scale-95"
+                                        >
+                                            <div className="aspect-square w-full relative overflow-hidden bg-muted">
+                                                {combo.image ? (
+                                                    <img src={combo.image} alt={combo.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                                                ) : (
+                                                    <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                                                        <Package className="h-12 w-12 opacity-20" />
+                                                    </div>
+                                                )}
+                                                <div className="absolute top-2 right-2 rounded-full bg-black/60 px-2 py-1 text-xs font-bold text-white backdrop-blur-md">
+                                                    S/ {Number(combo.price).toFixed(2)}
+                                                </div>
+                                            </div>
+                                            <div className="p-4">
+                                                <h3 className="font-semibold leading-tight">{combo.name}</h3>
+                                                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                                    {combo.products.map((p: any) => `${p.quantity}x ${p.product.name}`).join(', ')}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {combos.filter(c => c.active && c.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
+                                        <div className="col-span-full py-12 flex flex-col items-center justify-center text-center text-muted-foreground">
+                                            <Package className="h-12 w-12 mb-4 opacity-20" />
+                                            <p>No se encontraron combos</p>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <ProductGrid products={filteredProducts} onAddToCart={addToCart} />
+                            )}
                         </div>
                     </ScrollArea>
                 </div>

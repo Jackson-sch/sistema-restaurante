@@ -28,10 +28,27 @@ export function PendingPaymentsButton() {
     }
   }, [sheetOpen]);
 
-  // Periodic refresh every 30 seconds
+  // Periodic refresh every 3 seconds + visibility change + custom events
   useEffect(() => {
-    const interval = setInterval(fetchCount, 30000);
-    return () => clearInterval(interval);
+    const interval = setInterval(fetchCount, 3000);
+
+    // Refresh when window becomes visible
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchCount();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Instant update when payment is made in same tab
+    const handlePaymentUpdate = () => fetchCount();
+    window.addEventListener('payment-updated', handlePaymentUpdate);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('payment-updated', handlePaymentUpdate);
+    };
   }, []);
 
   return (

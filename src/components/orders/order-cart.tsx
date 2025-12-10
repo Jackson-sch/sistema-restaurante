@@ -120,6 +120,10 @@ export function OrderCart({
                 onClear()
                 onTableChange(null)
                 onRefreshTables?.() // Refresh tables list
+
+                // Dispatch event for instant navbar update
+                window.dispatchEvent(new CustomEvent('order-updated'))
+
                 onOrderCreated?.()
             } else {
                 toast.error(result.error || "Error al crear el pedido")

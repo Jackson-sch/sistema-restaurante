@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { ColumnDef } from "@tanstack/react-table"
 import { DataTable } from "@/components/ui/data-table"
 import { Button } from "@/components/ui/button"
@@ -16,7 +16,7 @@ import {
 import { MoreHorizontal, Plus, ArrowRightLeft, ArrowUpDown } from "lucide-react"
 import { IngredientDialog } from "./ingredient-dialog"
 import { StockAdjustmentDialog } from "./stock-adjustment-dialog"
-import { deleteIngredient } from "@/actions/inventory"
+import { deleteIngredient, getIngredientsPaginated } from "@/actions/inventory"
 import { toast } from "sonner"
 import {
   AlertDialog,
@@ -38,25 +38,63 @@ interface Ingredient {
   cost: number
 }
 
-interface IngredientsTableProps {
-  data: Ingredient[]
-}
+export function IngredientsTable() {
+  const [ingredients, setIngredients] = useState<Ingredient[]>([])
+  const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [totalPages, setTotalPages] = useState(1)
+  const [searchValue, setSearchValue] = useState("")
 
-export function IngredientsTable({ data }: IngredientsTableProps) {
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(null)
   const [adjustingIngredient, setAdjustingIngredient] = useState<Ingredient | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  const loadIngredients = useCallback(async () => {
+    setLoading(true)
+    const result = await getIngredientsPaginated({
+      page,
+      limit: pageSize,
+      search: searchValue || undefined,
+    })
+    if (result.success && result.data) {
+      setIngredients(result.data)
+      setTotalPages(result.meta.totalPages)
+    }
+    setLoading(false)
+  }, [page, pageSize, searchValue])
+
+  useEffect(() => {
+    loadIngredients()
+  }, [loadIngredients])
+
+  // Debounce search
+  const handleSearchChange = (value: string) => {
+    setSearchValue(value)
+    setPage(1) // Reset to first page on search
+  }
 
   const handleDelete = async () => {
     if (!deletingId) return
     const result = await deleteIngredient(deletingId)
     if (result.success) {
       toast.success("Ingrediente eliminado")
+      loadIngredients() // Refresh list
     } else {
       toast.error(result.error)
     }
     setDeletingId(null)
+  }
+
+  // Handle dialog close and refresh data
+  const handleDialogClose = (open: boolean) => {
+    if (!open) {
+      setIsCreateOpen(false)
+      setEditingIngredient(null)
+      setAdjustingIngredient(null)
+      loadIngredients() // Refresh after any dialog closes
+    }
   }
 
   // Column definitions
@@ -193,25 +231,34 @@ export function IngredientsTable({ data }: IngredientsTableProps) {
     <>
       <DataTable
         columns={columns}
-        data={data}
+        data={ingredients}
         searchPlaceholder="Buscar ingrediente..."
         filterComponent={filterComponent}
+        searchValue={searchValue}
+        onSearchChange={handleSearchChange}
+        pageCount={totalPages}
+        currentPage={page}
+        onPageChange={setPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size)
+          setPage(1)
+        }}
       />
 
       <IngredientDialog
         open={isCreateOpen}
-        onOpenChange={setIsCreateOpen}
+        onOpenChange={handleDialogClose}
       />
 
       <IngredientDialog
         open={!!editingIngredient}
-        onOpenChange={(open) => !open && setEditingIngredient(null)}
+        onOpenChange={handleDialogClose}
         ingredient={editingIngredient}
       />
 
       <StockAdjustmentDialog
         open={!!adjustingIngredient}
-        onOpenChange={(open) => !open && setAdjustingIngredient(null)}
+        onOpenChange={handleDialogClose}
         ingredient={adjustingIngredient}
       />
 

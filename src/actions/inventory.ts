@@ -42,6 +42,87 @@ export async function getIngredients() {
   }
 }
 
+export async function getIngredientsPaginated({
+  page = 1,
+  limit = 10,
+  search,
+  lowStockOnly,
+}: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  lowStockOnly?: boolean;
+}) {
+  await requirePermission(PERMISSIONS.INVENTORY_VIEW)
+
+  const session = await auth()
+  if (!session?.user?.restaurantId) {
+    return {
+      success: false,
+      data: [],
+      meta: { total: 0, page: 1, limit: 10, totalPages: 0 },
+      error: "No se encontró el restaurante"
+    }
+  }
+
+  const skip = (page - 1) * limit;
+
+  try {
+    const where: any = {
+      restaurantId: session.user.restaurantId,
+    };
+
+    if (search) {
+      where.name = { contains: search, mode: 'insensitive' };
+    }
+
+    const [ingredients, total] = await Promise.all([
+      prisma.ingredient.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { name: "asc" },
+      }),
+      prisma.ingredient.count({ where })
+    ]);
+
+    let serializedIngredients = ingredients.map(ingredient => ({
+      ...ingredient,
+      currentStock: Number(ingredient.currentStock),
+      minStock: Number(ingredient.minStock),
+      cost: Number(ingredient.cost),
+    }));
+
+    // Filter low stock on serialized data if needed
+    if (lowStockOnly) {
+      serializedIngredients = serializedIngredients.filter(
+        i => i.currentStock <= i.minStock
+      );
+    }
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      success: true,
+      data: serializedIngredients,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+      }
+    };
+  } catch (error) {
+    console.error("Error fetching ingredients:", error)
+    return {
+      success: false,
+      data: [],
+      meta: { total: 0, page: 1, limit: 10, totalPages: 0 },
+      error: "Error al obtener ingredientes"
+    };
+  }
+}
+
 export async function createIngredient(data: {
   name: string
   unit: string

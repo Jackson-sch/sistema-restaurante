@@ -74,11 +74,11 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
         </div>
 
         {/* Peak Hours & Categories - Split */}
-        <div className="col-span-1 h-[380px]">
+        <div className="col-span-1 h-auto lg:h-[420px]">
           <PeakHoursHeatmap data={peakHours} />
         </div>
 
-        <div className="col-span-1 md:h-[380px]">
+        <div className="col-span-1 h-auto lg:h-[420px]">
           <CategoryBreakdown data={categoryPerformance} />
         </div>
 
@@ -102,11 +102,11 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
               </div>
             </div>
 
-            <div className="col-span-1 md:h-[400px]">
+            <div className="col-span-1 h-auto lg:h-[450px]">
               <OrderTypeBreakdownChart data={orderTypeData.byType} />
             </div>
 
-            <div className="col-span-1 h-[400px]">
+            <div className="col-span-1 h-auto lg:h-[450px]">
               <TopProductsByType data={orderTypeData.byType} />
             </div>
           </>
