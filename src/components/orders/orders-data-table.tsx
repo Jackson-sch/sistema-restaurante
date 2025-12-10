@@ -11,23 +11,54 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { OrderDetailSheet } from './order-detail-sheet';
+import type { OrderColumn } from './columns';
 
-interface OrdersDataTableProps<TData, TValue> {
-    columns: ColumnDef<TData, TValue>[];
-    data: TData[];
+interface OrderItem {
+    id: string;
+    quantity: number;
+    unitPrice: number;
+    subtotal: number;
+    notes: string | null;
+    product: {
+        id: string;
+        name: string;
+        price: number;
+        cost: number;
+    };
+    modifiers?: Array<{
+        id: string;
+        price: number;
+        modifier: {
+            name: string;
+        };
+    }>;
+}
+
+export interface OrderWithItems extends OrderColumn {
+    items: OrderItem[];
+}
+
+interface OrdersDataTableProps {
+    columns: ColumnDef<OrderColumn>[];
+    data: OrderWithItems[];
     pageCount: number;
     currentPage: number;
 }
 
-export function OrdersDataTable<TData, TValue>({
+export function OrdersDataTable({
     columns,
     data,
     pageCount,
     currentPage,
-}: OrdersDataTableProps<TData, TValue>) {
+}: OrdersDataTableProps) {
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
+
+    // Sheet state
+    const [selectedOrder, setSelectedOrder] = React.useState<OrderWithItems | null>(null);
+    const [sheetOpen, setSheetOpen] = React.useState(false);
 
     // Handle search
     const [searchValue, setSearchValue] = React.useState(searchParams.get('search') || '');
@@ -82,6 +113,11 @@ export function OrdersDataTable<TData, TValue>({
         router.push(`${pathname}?${params.toString()}`);
     };
 
+    const handleRowClick = (row: OrderWithItems) => {
+        setSelectedOrder(row);
+        setSheetOpen(true);
+    };
+
     const filterComponent = (
         <Select
             value={searchParams.get('status') || 'ALL'}
@@ -104,20 +140,29 @@ export function OrdersDataTable<TData, TValue>({
     );
 
     return (
-        <DataTable
-            columns={columns}
-            data={data}
-            searchPlaceholder="Buscar por orden o cliente..."
-            filterComponent={filterComponent}
-            searchValue={searchValue}
-            onSearchChange={setSearchValue}
-            pageCount={pageCount}
-            currentPage={currentPage}
-            onPageChange={handlePageChange}
-            onPageSizeChange={handlePageSizeChange}
-            sortBy={searchParams.get('sortBy') || undefined}
-            sortOrder={(searchParams.get('sortOrder') as 'asc' | 'desc') || undefined}
-            onSortChange={handleSortChange}
-        />
+        <>
+            <DataTable
+                columns={columns}
+                data={data as unknown as OrderColumn[]}
+                searchPlaceholder="Buscar por orden o cliente..."
+                filterComponent={filterComponent}
+                searchValue={searchValue}
+                onSearchChange={setSearchValue}
+                pageCount={pageCount}
+                currentPage={currentPage}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
+                sortBy={searchParams.get('sortBy') || undefined}
+                sortOrder={(searchParams.get('sortOrder') as 'asc' | 'desc') || undefined}
+                onSortChange={handleSortChange}
+                onRowClick={(row) => handleRowClick(row as unknown as OrderWithItems)}
+            />
+            <OrderDetailSheet
+                order={selectedOrder}
+                open={sheetOpen}
+                onOpenChange={setSheetOpen}
+            />
+        </>
     );
 }
+

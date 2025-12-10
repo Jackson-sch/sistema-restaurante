@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useTransition, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { productSchema, type ProductInput } from "@/lib/schemas/menu"
@@ -50,6 +51,7 @@ interface ProductDialogProps {
 }
 
 export function ProductDialog({ categories, product, trigger }: ProductDialogProps) {
+    const router = useRouter()
     const { hasPermission } = usePermissions()
     const [open, setOpen] = useState(false)
     const [isPending, startTransition] = useTransition()
@@ -195,8 +197,16 @@ export function ProductDialog({ categories, product, trigger }: ProductDialogPro
     if (isEditing && !canUpdate) return null
     if (!isEditing && !canCreate) return null
 
+    const handleOpenChange = (newOpen: boolean) => {
+        setOpen(newOpen)
+        // Refresh the page data only when dialog closes after editing
+        if (!newOpen && isEditing) {
+            router.refresh()
+        }
+    }
+
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
                 {trigger || <Button>{isEditing ? "Editar" : "Nuevo Plato"}</Button>}
             </DialogTrigger>

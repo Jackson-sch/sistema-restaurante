@@ -79,6 +79,11 @@ export default async function OrdersPage({
                             }
                         }
                     }
+                },
+                ingredients: {
+                    include: {
+                        ingredient: true
+                    }
                 }
             },
             orderBy: { name: 'asc' },
@@ -100,6 +105,16 @@ export default async function OrdersPage({
                         ...m,
                         price: Number(m.price)
                     }))
+                }
+            })),
+            ingredients: product.ingredients.map(r => ({
+                ...r,
+                quantity: Number(r.quantity),
+                ingredient: {
+                    ...r.ingredient,
+                    cost: Number(r.ingredient.cost),
+                    currentStock: Number(r.ingredient.currentStock),
+                    minStock: Number(r.ingredient.minStock)
                 }
             }))
         }));

@@ -33,6 +33,15 @@ export type ProductWithRelations = Product & {
             modifiers: Modifier[]
         }
     })[]
+    recipe?: {
+        quantity: number
+        variantId: string | null
+        ingredient: {
+            id: string
+            name: string
+            unit: string
+        }
+    }[]
 }
 
 interface OrderInterfaceProps {

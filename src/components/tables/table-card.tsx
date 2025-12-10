@@ -30,9 +30,9 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
-import { TableDialog } from "./table-dialog"
-import { OrderDetailsDialog } from "./order-details-dialog"
-import { QuickPaymentDialog } from "./quick-payment-dialog"
+import { TableDialog } from "@/components/tables/table-dialog"
+import { OrderDetailsDialog } from "@/components/tables/order-details-dialog"
+import { UnifiedPaymentDialog } from "@/components/payments/unified-payment-dialog"
 
 type OrderStatus = "PENDING" | "PREPARING" | "READY" | "SERVED" | "COMPLETED" | "CANCELLED"
 type OrderType = "DINE_IN" | "TAKEOUT" | "DELIVERY"
@@ -359,12 +359,13 @@ export function TableCard({ table, onViewOrders, onUpdate, onQuickOrder }: Table
                             setPaymentDialogOpen(true)
                         }}
                     />
-                    <QuickPaymentDialog
+                    <UnifiedPaymentDialog
                         orderId={selectedOrderId}
                         orderNumber={selectedOrderNumber}
                         totalAmount={selectedOrderTotal}
                         open={paymentDialogOpen}
                         onOpenChange={setPaymentDialogOpen}
+                        tableInfo={table.zone ? `Mesa ${table.number} - ${table.zone.name}` : `Mesa ${table.number}`}
                         onSuccess={() => {
                             onUpdate?.()
                             setSelectedOrderId(null)

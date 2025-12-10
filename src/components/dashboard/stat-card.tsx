@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { ComparisonBadge } from "./comparison-badge"
+import { ComparisonBadge } from "@/components/dashboard/comparison-badge"
 
 interface StatCardProps {
   title: string

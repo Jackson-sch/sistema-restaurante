@@ -12,9 +12,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronRight, Settings, Pencil, Trash2, Plus } from "lucide-react";
+import { ChevronDown, ChevronRight, Settings, Pencil, Trash2, Plus, Loader2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Modifier {
     id: string;
@@ -49,6 +59,8 @@ export function ModifierManager({ productId, modifierGroups, onRefresh }: Modifi
     const [editingGroup, setEditingGroup] = useState<ModifierGroup | null>(null);
     const [editingModifier, setEditingModifier] = useState<Modifier | null>(null);
     const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+    const [deletingGroup, setDeletingGroup] = useState<ModifierGroup | null>(null);
+    const [deletingModifier, setDeletingModifier] = useState<{ id: string; name: string } | null>(null);
     const [isPending, startTransition] = useTransition();
 
     // Forms
@@ -139,37 +151,37 @@ export function ModifierManager({ productId, modifierGroups, onRefresh }: Modifi
         });
     };
 
-    const handleDeleteGroup = (groupId: string) => {
-        if (confirm("¿Estás seguro de eliminar este grupo y todos sus modificadores?")) {
-            startTransition(async () => {
-                const result = await deleteModifierGroup(productId, groupId);
-                if (result.success) {
-                    toast.success("Grupo eliminado");
-                    setLocalGroups(prev => prev.filter(g => g.id !== groupId));
-                } else {
-                    toast.error(result.error);
-                }
-            });
-        }
+    const handleDeleteGroup = () => {
+        if (!deletingGroup) return;
+        startTransition(async () => {
+            const result = await deleteModifierGroup(productId, deletingGroup.id);
+            if (result.success) {
+                toast.success("Grupo eliminado");
+                setLocalGroups(prev => prev.filter(g => g.id !== deletingGroup.id));
+            } else {
+                toast.error(result.error);
+            }
+            setDeletingGroup(null);
+        });
     };
 
-    const handleDeleteModifier = (modifierId: string) => {
-        if (confirm("¿Estás seguro de eliminar este modificador?")) {
-            startTransition(async () => {
-                const result = await deleteModifier(modifierId);
-                if (result.success) {
-                    toast.success("Modificador eliminado");
-                    setLocalGroups(prev => {
-                        return prev.map(g => {
-                            const filtered = g.modifiers.filter(m => m.id !== modifierId);
-                            return { ...g, modifiers: filtered };
-                        });
+    const handleDeleteModifier = () => {
+        if (!deletingModifier) return;
+        startTransition(async () => {
+            const result = await deleteModifier(deletingModifier.id);
+            if (result.success) {
+                toast.success("Modificador eliminado");
+                setLocalGroups(prev => {
+                    return prev.map(g => {
+                        const filtered = g.modifiers.filter(m => m.id !== deletingModifier.id);
+                        return { ...g, modifiers: filtered };
                     });
-                } else {
-                    toast.error(result.error);
-                }
-            });
-        }
+                });
+            } else {
+                toast.error(result.error);
+            }
+            setDeletingModifier(null);
+        });
     };
 
     const handleGroupDialogClose = (open: boolean) => {
@@ -208,10 +220,10 @@ export function ModifierManager({ productId, modifierGroups, onRefresh }: Modifi
                                 key={group.id}
                                 group={group}
                                 onEditGroup={() => { setEditingGroup(group); setIsGroupDialogOpen(true); }}
-                                onDeleteGroup={() => handleDeleteGroup(group.id)}
+                                onDeleteGroup={() => setDeletingGroup(group)}
                                 onAddModifier={() => { setSelectedGroupId(group.id); setEditingModifier(null); setIsModifierDialogOpen(true); }}
                                 onEditModifier={(mod) => { setSelectedGroupId(group.id); setEditingModifier(mod); setIsModifierDialogOpen(true); }}
-                                onDeleteModifier={(modId) => handleDeleteModifier(modId)}
+                                onDeleteModifier={(mod) => setDeletingModifier({ id: mod.id, name: mod.name })}
                             />
                         ))}
                     </div>
@@ -220,7 +232,10 @@ export function ModifierManager({ productId, modifierGroups, onRefresh }: Modifi
 
             {/* Group Dialog */}
             <Dialog open={isGroupDialogOpen} onOpenChange={handleGroupDialogClose}>
-                <DialogContent>
+                <DialogContent
+                    onPointerDownOutside={(e) => e.preventDefault()}
+                    onInteractOutside={(e) => e.preventDefault()}
+                >
                     <DialogHeader>
                         <DialogTitle>{editingGroup ? "Editar Grupo" : "Nuevo Grupo"}</DialogTitle>
                     </DialogHeader>
@@ -252,14 +267,7 @@ export function ModifierManager({ productId, modifierGroups, onRefresh }: Modifi
                                 <Input id="maxSelect" type="number" {...groupForm.register("maxSelect")} />
                             </div>
                         </div>
-                        <DialogFooter className="gap-2 sm:gap-0">
-                            {!editingGroup && (
-                                <Button type="button" variant="outline" onClick={groupForm.handleSubmit((data) => {
-                                    onGroupSubmit(data);
-                                })} disabled={isPending}>
-                                    Guardar y Crear Otro
-                                </Button>
-                            )}
+                        <DialogFooter>
                             <Button type="submit" disabled={isPending}>
                                 {isPending ? "Guardando..." : "Guardar"}
                             </Button>
@@ -270,7 +278,10 @@ export function ModifierManager({ productId, modifierGroups, onRefresh }: Modifi
 
             {/* Modifier Dialog */}
             <Dialog open={isModifierDialogOpen} onOpenChange={handleModifierDialogClose}>
-                <DialogContent>
+                <DialogContent
+                    onPointerDownOutside={(e) => e.preventDefault()}
+                    onInteractOutside={(e) => e.preventDefault()}
+                >
                     <DialogHeader>
                         <DialogTitle>{editingModifier ? "Editar Opción" : "Nueva Opción"}</DialogTitle>
                     </DialogHeader>
@@ -290,14 +301,7 @@ export function ModifierManager({ productId, modifierGroups, onRefresh }: Modifi
                             <Switch id="modAvailable" checked={modifierForm.watch("available")} onCheckedChange={c => modifierForm.setValue("available", c)} />
                             <Label htmlFor="modAvailable">Disponible</Label>
                         </div>
-                        <DialogFooter className="gap-2 sm:gap-0">
-                            {!editingModifier && (
-                                <Button type="button" variant="outline" onClick={modifierForm.handleSubmit((data) => {
-                                    onModifierSubmit(data);
-                                })} disabled={isPending}>
-                                    Guardar y Crear Otro
-                                </Button>
-                            )}
+                        <DialogFooter>
                             <Button type="submit" disabled={isPending}>
                                 {isPending ? "Guardando..." : "Guardar"}
                             </Button>
@@ -305,6 +309,69 @@ export function ModifierManager({ productId, modifierGroups, onRefresh }: Modifi
                     </form>
                 </DialogContent>
             </Dialog>
+
+            {/* Delete Group Confirmation */}
+            <AlertDialog open={!!deletingGroup} onOpenChange={(open) => !open && setDeletingGroup(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>¿Eliminar grupo de modificadores?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Estás por eliminar el grupo{" "}
+                            <span className="font-medium text-foreground">"{deletingGroup?.name}"</span> y
+                            todas sus opciones ({deletingGroup?.modifiers.length || 0} opciones).
+                            Esta acción no se puede deshacer.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isPending}>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDeleteGroup}
+                            disabled={isPending}
+                            className="bg-destructive text-white hover:bg-destructive/90"
+                        >
+                            {isPending ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                                    Eliminando...
+                                </>
+                            ) : (
+                                "Eliminar grupo"
+                            )}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Delete Modifier Confirmation */}
+            <AlertDialog open={!!deletingModifier} onOpenChange={(open) => !open && setDeletingModifier(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>¿Eliminar opción?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Estás por eliminar la opción{" "}
+                            <span className="font-medium text-foreground">"{deletingModifier?.name}"</span>.
+                            Esta acción no se puede deshacer.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isPending}>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDeleteModifier}
+                            disabled={isPending}
+                            className="bg-destructive text-white hover:bg-destructive/90"
+                        >
+                            {isPending ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                                    Eliminando...
+                                </>
+                            ) : (
+                                "Eliminar"
+                            )}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
@@ -322,7 +389,7 @@ function CollapsibleGroup({
     onDeleteGroup: () => void;
     onAddModifier: () => void;
     onEditModifier: (m: Modifier) => void;
-    onDeleteModifier: (id: string) => void;
+    onDeleteModifier: (m: Modifier) => void;
 }) {
     const [isOpen, setIsOpen] = useState(false);
 
@@ -371,7 +438,7 @@ function CollapsibleGroup({
                                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEditModifier(modifier)}>
                                             <Pencil className="h-3 w-3" />
                                         </Button>
-                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500" onClick={() => onDeleteModifier(modifier.id)}>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500" onClick={() => onDeleteModifier(modifier)}>
                                             <Trash2 className="h-3 w-3" />
                                         </Button>
                                     </div>

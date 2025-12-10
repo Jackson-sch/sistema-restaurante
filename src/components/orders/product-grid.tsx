@@ -1,8 +1,8 @@
 'use client';
 
-import { ProductWithRelations, CartItemInput } from './order-interface';
-import { ProductCard } from './product-card';
 import { Package } from 'lucide-react';
+import { ProductWithRelations, CartItemInput } from '@/components/orders/order-interface';
+import { ProductCard } from '@/components/orders/product-card';
 
 interface ProductGridProps {
     products: ProductWithRelations[];
@@ -23,7 +23,7 @@ export function ProductGrid({ products, onAddToCart }: ProductGridProps) {
     }
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 animate-in fade-in duration-300 pr-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 animate-in fade-in duration-300 pr-2">
             {products.map((product, index) => (
                 <div
                     key={product.id}

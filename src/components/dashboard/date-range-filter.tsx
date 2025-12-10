@@ -7,20 +7,26 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
-import { CalendarIcon } from "lucide-react"
+import { CalendarIcon, CalendarDays, CalendarMinus, CalendarRange, Clock } from "lucide-react"
 import { format, startOfDay, endOfDay } from "date-fns"
 import { es } from "date-fns/locale"
 import { DateRange } from "react-day-picker"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { useCallback } from "react"
+import { LucideIcon } from "lucide-react"
 
-const presets = [
-  { label: "Hoy", days: 0 },
-  { label: "Ayer", days: 1 },
-  { label: "Últimos 7 días", days: 6 },
-  { label: "Últimos 30 días", days: 29 },
-  { label: "Últimos 90 días", days: 89 },
+const presets: { label: string; days: number; icon: LucideIcon }[] = [
+  { label: "Hoy", days: 0, icon: Clock },
+  { label: "Ayer", days: 1, icon: CalendarMinus },
+  { label: "7 días", days: 6, icon: CalendarDays },
+  { label: "30 días", days: 29, icon: CalendarRange },
+  { label: "90 días", days: 89, icon: CalendarIcon },
 ]
 
 export function DateRangeFilter() {
@@ -92,27 +98,37 @@ export function DateRangeFilter() {
 
   return (
     <div className="flex flex-col sm:flex-row gap-2">
-      <div className="flex gap-2 flex-wrap">
-        {presets.map((preset) => (
-          <Button
-            key={preset.label}
-            variant="outline"
-            size="sm"
-            onClick={() => handlePresetClick(preset.days)}
-            className={cn(
-              "text-xs",
-              // light styles
-              "bg-background [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_2px_4px_rgba(0,0,0,.05),0_12px_24px_rgba(0,0,0,.05)]",
-              // dark styles
-              "dark:bg-background transform-gpu dark:[box-shadow:0_-20px_80px_-20px_#ffffff1f_inset] dark:[border:1px_solid_rgba(255,255,255,.1)]",
-              preset.days === 0 &&
-              from?.toDateString() === startOfDay(new Date()).toDateString() &&
-              "bg-primary"
-            )}
-          >
-            {preset.label}
-          </Button>
-        ))}
+      <div className="flex gap-1 md:gap-2 flex-wrap">
+        {presets.map((preset) => {
+          const Icon = preset.icon
+          return (
+            <Tooltip key={preset.label}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePresetClick(preset.days)}
+                  className={cn(
+                    "text-xs px-2 md:px-3",
+                    // light styles
+                    "bg-background [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_2px_4px_rgba(0,0,0,.05),0_12px_24px_rgba(0,0,0,.05)]",
+                    // dark styles
+                    "dark:bg-background transform-gpu dark:[box-shadow:0_-20px_80px_-20px_#ffffff1f_inset] dark:[border:1px_solid_rgba(255,255,255,.1)]",
+                    preset.days === 0 &&
+                    from?.toDateString() === startOfDay(new Date()).toDateString() &&
+                    "bg-primary"
+                  )}
+                >
+                  <Icon className="h-4 w-4 md:mr-1.5" />
+                  <span className="hidden md:inline">{preset.label}</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="md:hidden">
+                <p>{preset.label}</p>
+              </TooltipContent>
+            </Tooltip>
+          )
+        })}
       </div>
 
       <Popover>

@@ -1,7 +1,6 @@
 import { checkOpenShift, getShiftSummary } from "@/actions/cash-register"
 import { OpenShiftDialog } from "@/components/cash-register/open-shift-dialog"
 import { ShiftDashboard } from "@/components/cash-register/shift-dashboard"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { InfoIcon } from "lucide-react"
 import Link from "next/link"
@@ -51,19 +50,6 @@ export default async function CashRegisterPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Caja</h1>
-                    <p className="text-muted-foreground">
-                        Gestión de turnos y movimientos de efectivo.
-                    </p>
-                </div>
-                <Button variant="outline" asChild>
-                    <Link href="/dashboard/cash-register/history">
-                        Ver Historial
-                    </Link>
-                </Button>
-            </div>
 
             <ShiftDashboard shift={{
                 ...shiftSummary,
@@ -79,6 +65,8 @@ export default async function CashRegisterPage() {
                     createdAt: tx.createdAt.toISOString()
                 }))
             }} />
+
+
         </div>
     )
 }

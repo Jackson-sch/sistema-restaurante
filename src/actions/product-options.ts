@@ -1,13 +1,13 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { 
-  variantSchema, 
-  modifierGroupSchema, 
-  modifierSchema, 
-  type VariantInput, 
-  type ModifierGroupInput, 
-  type ModifierInput 
+import {
+  variantSchema,
+  modifierGroupSchema,
+  modifierSchema,
+  type VariantInput,
+  type ModifierGroupInput,
+  type ModifierInput
 } from "@/lib/schemas/menu"
 import { revalidatePath } from "next/cache"
 import { Prisma } from "@prisma/client"
@@ -26,81 +26,81 @@ function handlePrismaError(error: unknown, defaultMessage: string) {
   return defaultMessage
 }
 
-export async function getProductOptions(productId: string) { 
-  try { 
+export async function getProductOptions(productId: string) {
+  try {
     if (!productId) {
       return { success: false, error: "ID de producto inválido" }
     }
 
-    const product = await prisma.product.findUnique({ 
-      where: { id: productId }, 
-      include: { 
-        variants: { 
-          orderBy: { price: 'asc' } 
-        }, 
-        modifierGroups: { 
-          include: { 
-            modifierGroup: { 
-              include: { 
-                modifiers: { 
-                  orderBy: { price: 'asc' } 
-                } 
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      include: {
+        variants: {
+          orderBy: { price: 'asc' }
+        },
+        modifierGroups: {
+          include: {
+            modifierGroup: {
+              include: {
+                modifiers: {
+                  orderBy: { price: 'asc' }
+                }
               }
             }
-          }, 
+          },
           orderBy: { order: 'asc' }
         }
       }
-    }) 
+    })
 
     if (!product) {
       return { success: false, error: "Producto no encontrado" }
     }
 
-    return { 
-      success: true, 
-      data: { 
-        variants: product.variants.map(v => ({ 
-          ...v, 
-          price: Number(v.price) 
-        })), 
-        modifierGroups: product.modifierGroups.map(pmg => ({ 
-          ...pmg.modifierGroup, 
-          modifiers: pmg.modifierGroup.modifiers.map(m => ({ 
-            ...m, 
-            price: Number(m.price) 
-          })) 
-        })) 
+    return {
+      success: true,
+      data: {
+        variants: product.variants.map(v => ({
+          ...v,
+          price: Number(v.price)
+        })),
+        modifierGroups: product.modifierGroups.map(pmg => ({
+          ...pmg.modifierGroup,
+          modifiers: pmg.modifierGroup.modifiers.map(m => ({
+            ...m,
+            price: Number(m.price)
+          }))
+        }))
       }
     }
-  } catch (error) { 
-    return { 
-      success: false, 
-      error: handlePrismaError(error, "Error al obtener opciones") 
+  } catch (error) {
+    return {
+      success: false,
+      error: handlePrismaError(error, "Error al obtener opciones")
     }
-  } 
-} 
+  }
+}
 
 // --- Variants ---
 
 export async function createVariant(data: VariantInput) {
   try {
     const validated = variantSchema.parse(data)
-    const variant = await prisma.productVariant.create({ 
-      data: validated 
+    const variant = await prisma.productVariant.create({
+      data: validated
     })
-    revalidatePath("/dashboard/menu/dishes")
-    return { 
-      success: true, 
-      data: { ...variant, price: Number(variant.price) } 
+    // No llamar revalidatePath para evitar cerrar el dialog - se actualiza con onRefresh()
+    return {
+      success: true,
+      data: { ...variant, price: Number(variant.price) }
     }
   } catch (error) {
     if (error instanceof Error && error.name === 'ZodError') {
       return { success: false, error: "Datos de variante inválidos" }
     }
-    return { 
-      success: false, 
-      error: handlePrismaError(error, "Error al crear variante") 
+    return {
+      success: false,
+      error: handlePrismaError(error, "Error al crear variante")
     }
   }
 }
@@ -112,22 +112,22 @@ export async function updateVariant(id: string, data: Partial<VariantInput>) {
     }
 
     const validated = variantSchema.partial().parse(data)
-    const variant = await prisma.productVariant.update({ 
-      where: { id }, 
-      data: validated 
+    const variant = await prisma.productVariant.update({
+      where: { id },
+      data: validated
     })
-    revalidatePath("/dashboard/menu/dishes")
-    return { 
-      success: true, 
-      data: { ...variant, price: Number(variant.price) } 
+    // No llamar revalidatePath para evitar cerrar el dialog
+    return {
+      success: true,
+      data: { ...variant, price: Number(variant.price) }
     }
   } catch (error) {
     if (error instanceof Error && error.name === 'ZodError') {
       return { success: false, error: "Datos de variante inválidos" }
     }
-    return { 
-      success: false, 
-      error: handlePrismaError(error, "Error al actualizar variante") 
+    return {
+      success: false,
+      error: handlePrismaError(error, "Error al actualizar variante")
     }
   }
 }
@@ -139,12 +139,12 @@ export async function deleteVariant(id: string) {
     }
 
     await prisma.productVariant.delete({ where: { id } })
-    revalidatePath("/dashboard/menu/dishes")
+    // No llamar revalidatePath para evitar cerrar el dialog
     return { success: true }
   } catch (error) {
-    return { 
-      success: false, 
-      error: handlePrismaError(error, "Error al eliminar variante") 
+    return {
+      success: false,
+      error: handlePrismaError(error, "Error al eliminar variante")
     }
   }
 }
@@ -158,35 +158,35 @@ export async function createModifierGroup(productId: string, data: ModifierGroup
     }
 
     const validated = modifierGroupSchema.parse(data)
-    
+
     // Usar transacción para asegurar consistencia
     const result = await prisma.$transaction(async (tx) => {
-      const group = await tx.modifierGroup.create({ 
-        data: validated 
+      const group = await tx.modifierGroup.create({
+        data: validated
       })
-      
-      await tx.productModifierGroup.create({ 
-        data: { 
-          productId, 
-          modifierGroupId: group.id 
-        } 
+
+      await tx.productModifierGroup.create({
+        data: {
+          productId,
+          modifierGroupId: group.id
+        }
       })
-      
+
       return group
     })
 
-    revalidatePath("/dashboard/menu/dishes")
-    return { 
-      success: true, 
-      data: { ...result, modifiers: [] } 
+    // No llamar revalidatePath para evitar cerrar el dialog
+    return {
+      success: true,
+      data: { ...result, modifiers: [] }
     }
   } catch (error) {
     if (error instanceof Error && error.name === 'ZodError') {
       return { success: false, error: "Datos de grupo inválidos" }
     }
-    return { 
-      success: false, 
-      error: handlePrismaError(error, "Error al crear grupo de modificadores") 
+    return {
+      success: false,
+      error: handlePrismaError(error, "Error al crear grupo de modificadores")
     }
   }
 }
@@ -203,14 +203,14 @@ export async function updateModifierGroup(id: string, data: Partial<ModifierGrou
       data: validated,
       include: { modifiers: true }
     })
-    revalidatePath("/dashboard/menu/dishes")
+    // No llamar revalidatePath para evitar cerrar el dialog
     return {
       success: true,
       data: {
         ...group,
-        modifiers: group.modifiers.map(m => ({ 
-          ...m, 
-          price: Number(m.price) 
+        modifiers: group.modifiers.map(m => ({
+          ...m,
+          price: Number(m.price)
         }))
       }
     }
@@ -218,9 +218,9 @@ export async function updateModifierGroup(id: string, data: Partial<ModifierGrou
     if (error instanceof Error && error.name === 'ZodError') {
       return { success: false, error: "Datos de grupo inválidos" }
     }
-    return { 
-      success: false, 
-      error: handlePrismaError(error, "Error al actualizar grupo") 
+    return {
+      success: false,
+      error: handlePrismaError(error, "Error al actualizar grupo")
     }
   }
 }
@@ -232,19 +232,19 @@ export async function deleteModifierGroup(productId: string, groupId: string) {
     }
 
     await prisma.productModifierGroup.delete({
-      where: { 
-        productId_modifierGroupId: { 
-          productId, 
-          modifierGroupId: groupId 
-        } 
+      where: {
+        productId_modifierGroupId: {
+          productId,
+          modifierGroupId: groupId
+        }
       }
     })
-    revalidatePath("/dashboard/menu/dishes")
+    // No llamar revalidatePath para evitar cerrar el dialog
     return { success: true }
   } catch (error) {
-    return { 
-      success: false, 
-      error: handlePrismaError(error, "Error al eliminar grupo") 
+    return {
+      success: false,
+      error: handlePrismaError(error, "Error al eliminar grupo")
     }
   }
 }
@@ -254,21 +254,21 @@ export async function deleteModifierGroup(productId: string, groupId: string) {
 export async function createModifier(data: ModifierInput) {
   try {
     const validated = modifierSchema.parse(data)
-    const modifier = await prisma.modifier.create({ 
-      data: validated 
+    const modifier = await prisma.modifier.create({
+      data: validated
     })
-    revalidatePath("/dashboard/menu/dishes")
-    return { 
-      success: true, 
-      data: { ...modifier, price: Number(modifier.price) } 
+    // No llamar revalidatePath para evitar cerrar el dialog
+    return {
+      success: true,
+      data: { ...modifier, price: Number(modifier.price) }
     }
   } catch (error) {
     if (error instanceof Error && error.name === 'ZodError') {
       return { success: false, error: "Datos de modificador inválidos" }
     }
-    return { 
-      success: false, 
-      error: handlePrismaError(error, "Error al crear modificador") 
+    return {
+      success: false,
+      error: handlePrismaError(error, "Error al crear modificador")
     }
   }
 }
@@ -280,22 +280,22 @@ export async function updateModifier(id: string, data: Partial<ModifierInput>) {
     }
 
     const validated = modifierSchema.partial().parse(data)
-    const modifier = await prisma.modifier.update({ 
-      where: { id }, 
-      data: validated 
+    const modifier = await prisma.modifier.update({
+      where: { id },
+      data: validated
     })
-    revalidatePath("/dashboard/menu/dishes")
-    return { 
-      success: true, 
-      data: { ...modifier, price: Number(modifier.price) } 
+    // No llamar revalidatePath para evitar cerrar el dialog
+    return {
+      success: true,
+      data: { ...modifier, price: Number(modifier.price) }
     }
   } catch (error) {
     if (error instanceof Error && error.name === 'ZodError') {
       return { success: false, error: "Datos de modificador inválidos" }
     }
-    return { 
-      success: false, 
-      error: handlePrismaError(error, "Error al actualizar modificador") 
+    return {
+      success: false,
+      error: handlePrismaError(error, "Error al actualizar modificador")
     }
   }
 }
@@ -307,12 +307,12 @@ export async function deleteModifier(id: string) {
     }
 
     await prisma.modifier.delete({ where: { id } })
-    revalidatePath("/dashboard/menu/dishes")
+    // No llamar revalidatePath para evitar cerrar el dialog
     return { success: true }
   } catch (error) {
-    return { 
-      success: false, 
-      error: handlePrismaError(error, "Error al eliminar modificador") 
+    return {
+      success: false,
+      error: handlePrismaError(error, "Error al eliminar modificador")
     }
   }
 }

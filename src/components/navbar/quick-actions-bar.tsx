@@ -3,6 +3,7 @@
 import { ActiveOrdersButton } from "./active-orders-button"
 import { CashRegisterButton } from "./cash-register-button"
 import { NewOrderButton } from "./new-order-button"
+import { PendingPaymentsButton } from "./pending-payments-button"
 
 interface QuickActionsBarProps {
   categories?: any[]
@@ -16,7 +17,9 @@ export function QuickActionsBar({ categories = [], products = [] }: QuickActions
         <NewOrderButton categories={categories} products={products} />
       )}
       <ActiveOrdersButton />
+      <PendingPaymentsButton />
       <CashRegisterButton />
     </div>
   )
 }
+

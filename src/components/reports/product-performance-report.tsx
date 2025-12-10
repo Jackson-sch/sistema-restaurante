@@ -95,13 +95,13 @@ export function ProductPerformanceReport() {
 
       <div className="grid gap-4 md:grid-cols-2">
         {/* Top Products Chart */}
-        <Card className="col-span-2 lg:col-span-1">
+        <Card className="col-span-2 lg:col-span-1 overflow-hidden">
           <CardHeader>
             <CardTitle>Top 10 Productos Más Vendidos</CardTitle>
             <CardDescription>Basado en cantidad de unidades vendidas.</CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={productChartConfig} className="min-h-[350px] w-full">
+            <ChartContainer config={productChartConfig} className="min-h-[250px] md:min-h-[350px] w-full">
               <BarChart
                 accessibilityLayer
                 data={data.topProducts}
@@ -123,8 +123,8 @@ export function ProductPerformanceReport() {
                   tickLine={false}
                   tickMargin={10}
                   axisLine={false}
-                  width={120}
-                  tickFormatter={(value) => (value.length > 15 ? `${value.substring(0, 15)}...` : value)}
+                  width={80}
+                  tickFormatter={(value) => (value.length > 10 ? `${value.substring(0, 10)}...` : value)}
                   className="text-xs"
                 />
                 <XAxis dataKey="quantity" type="number" hide />
@@ -157,13 +157,13 @@ export function ProductPerformanceReport() {
         </Card>
 
         {/* Categories Chart */}
-        <Card className="col-span-2 lg:col-span-1">
+        <Card className="col-span-2 lg:col-span-1 overflow-hidden">
           <CardHeader>
             <CardTitle>Ventas por Categoría</CardTitle>
             <CardDescription>Ingresos generados por cada categoría.</CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={categoryChartConfig} className="min-h-[350px] w-full">
+            <ChartContainer config={categoryChartConfig} className="min-h-[250px] md:min-h-[350px] w-full">
               <BarChart
                 accessibilityLayer
                 data={data.topCategories}
@@ -188,7 +188,7 @@ export function ProductPerformanceReport() {
                   tickLine={false}
                   tickMargin={10}
                   axisLine={false}
-                  width={120}
+                  width={80}
                   className="text-xs"
                 />
                 <XAxis dataKey="revenue" type="number" hide />

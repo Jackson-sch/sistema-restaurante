@@ -7,9 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { formatCurrency } from '@/lib/utils';
-import { Minus, Plus } from 'lucide-react';
+import { Minus, Plus, ChefHat, ChevronDown } from 'lucide-react';
 import { Modifier } from '@prisma/client';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -129,12 +129,12 @@ export function ProductDialog({ product, open, onOpenChange, onAddToCart }: Prod
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
-                <DialogHeader>
+            <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0">
+                <DialogHeader className="shrink-0 p-6 pb-0">
                     <DialogTitle>{product.name}</DialogTitle>
                 </DialogHeader>
 
-                <ScrollArea className="flex-1 pr-4">
+                <div className="flex-1 overflow-y-auto px-6 min-h-0">
                     <div className="space-y-6 py-4">
                         {/* Variants */}
                         {product.variants.length > 0 && (
@@ -153,6 +153,37 @@ export function ProductDialog({ product, open, onOpenChange, onAddToCart }: Prod
                                 </RadioGroup>
                             </div>
                         )}
+
+                        {/* Ingredients */}
+                        {product.recipe && product.recipe.length > 0 && (() => {
+                            // Filter ingredients: show base (variantId=null) + selected variant ingredients
+                            const relevantIngredients = product.recipe.filter(r =>
+                                !r.variantId || r.variantId === selectedVariantId
+                            );
+                            if (relevantIngredients.length === 0) return null;
+                            return (
+                                <Collapsible className="border rounded-md">
+                                    <CollapsibleTrigger className="flex w-full items-center justify-between p-3 hover:bg-muted/50 transition-colors">
+                                        <div className="flex items-center gap-2">
+                                            <ChefHat className="h-4 w-4 text-muted-foreground" />
+                                            <span className="text-sm font-medium">Ingredientes</span>
+                                            <Badge variant="secondary" className="text-xs">{relevantIngredients.length}</Badge>
+                                        </div>
+                                        <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 in-data-[state=open]:rotate-180" />
+                                    </CollapsibleTrigger>
+                                    <CollapsibleContent className="border-t">
+                                        <div className="p-3 space-y-1.5">
+                                            {relevantIngredients.map((item, idx) => (
+                                                <div key={idx} className="flex items-center justify-between text-sm py-1">
+                                                    <span className="text-muted-foreground">• {item.ingredient.name}</span>
+                                                    <span className="text-xs font-medium text-foreground">{item.quantity} {item.ingredient.unit}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </CollapsibleContent>
+                                </Collapsible>
+                            );
+                        })()}
 
                         {/* Modifiers */}
                         {product.modifierGroups.map(group => (
@@ -241,9 +272,9 @@ export function ProductDialog({ product, open, onOpenChange, onAddToCart }: Prod
                             />
                         </div>
                     </div>
-                </ScrollArea>
+                </div>
 
-                <DialogFooter className="flex items-center justify-between sm:justify-between border-t pt-4">
+                <DialogFooter className="shrink-0 flex items-center justify-between sm:justify-between border-t p-6 pt-4">
                     <div className="flex items-center space-x-3">
                         <Button
                             variant="outline"

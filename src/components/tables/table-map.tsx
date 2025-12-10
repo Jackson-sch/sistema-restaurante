@@ -150,7 +150,7 @@ export function TableMap({ tables, onUpdate }: TableMapProps) {
               {!isCollapsed && (
                 <CardContent className="pt-6">
                   {zone.tables.length > 0 ? (
-                    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                    <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
                       {zone.tables.map((table) => (
                         <TableMapItem
                           key={table.id}

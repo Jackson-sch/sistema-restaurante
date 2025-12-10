@@ -20,29 +20,43 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { processQuickPayment, getReceiptSeries } from "@/actions/order-details"
+import { registerPayment } from "@/actions/payments"
+import { getReceiptSeries } from "@/actions/receipt-series"
+import { getReceiptData } from "@/actions/receipts"
 import { formatCurrency } from "@/lib/utils"
 import { toast } from "sonner"
-import { CreditCard, Banknote, Smartphone, Building2, ArrowLeftRight } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { CreditCard, Banknote, Smartphone, Building2, ArrowLeftRight, Loader2 } from "lucide-react"
+import { ReceiptPreview } from "@/components/receipts/receipt-preview"
+import type { ReceiptData } from "@/types/receipt"
 
-interface QuickPaymentDialogProps {
+export interface UnifiedPaymentDialogProps {
   orderId: string
   orderNumber: string
   totalAmount: number
   open: boolean
   onOpenChange: (open: boolean) => void
   onSuccess?: () => void
+  tableInfo?: string // Optional: "Mesa 1 - Zona A"
 }
 
-export function QuickPaymentDialog({
+const paymentMethods = [
+  { value: "CASH", label: "Efectivo", icon: Banknote },
+  { value: "CARD", label: "Tarjeta", icon: CreditCard },
+  { value: "YAPE", label: "Yape", icon: Smartphone },
+  { value: "PLIN", label: "Plin", icon: Smartphone },
+  { value: "TRANSFER", label: "Transferencia", icon: Building2 },
+  { value: "MIXED", label: "Mixto", icon: ArrowLeftRight },
+]
+
+export function UnifiedPaymentDialog({
   orderId,
   orderNumber,
   totalAmount,
   open,
   onOpenChange,
-  onSuccess
-}: QuickPaymentDialogProps) {
+  onSuccess,
+  tableInfo,
+}: UnifiedPaymentDialogProps) {
   const [loading, setLoading] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState("CASH")
   const [receiptType, setReceiptType] = useState("NOTA_VENTA")
@@ -53,7 +67,11 @@ export function QuickPaymentDialog({
   const [reference, setReference] = useState("")
   const [notes, setNotes] = useState("")
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null)
-  const router = useRouter()
+  const [seriesList, setSeriesList] = useState<any[]>([])
+
+  // Receipt preview state
+  const [receiptData, setReceiptData] = useState<ReceiptData | null>(null)
+  const [showReceipt, setShowReceipt] = useState(false)
 
   // Reset form when dialog opens
   useEffect(() => {
@@ -66,12 +84,27 @@ export function QuickPaymentDialog({
       setCustomerAddress("")
       setReference("")
       setNotes("")
+      setReceiptData(null)
+      setShowReceipt(false)
     }
   }, [open, totalAmount])
 
-  // Auto-fill customer data for Ticket and fetch receipt series
+  // Fetch receipt series
   useEffect(() => {
-    if (receiptType === "NOTA_VENTA") {
+    const fetchSeries = async () => {
+      const result = await getReceiptSeries()
+      if (result.success && result.data) {
+        setSeriesList(result.data)
+      }
+    }
+    if (open) {
+      fetchSeries()
+    }
+  }, [open])
+
+  // Auto-fill customer data and fetch receipt series preview
+  useEffect(() => {
+    if (receiptType === "NOTA_VENTA" || receiptType === "TICKET") {
       setCustomerDoc("00000000")
       setCustomerName("Publico General")
       setCustomerAddress("")
@@ -80,20 +113,17 @@ export function QuickPaymentDialog({
       if (customerName === "Publico General") setCustomerName("")
     }
 
-    // Fetch receipt series preview
-    const fetchSeriesPreview = async () => {
-      const result = await getReceiptSeries(receiptType)
-      if (result.success && result.data) {
-        setReceiptPreview(result.data.previewNumber)
+    // Get series preview
+    if (seriesList.length > 0) {
+      const series = seriesList.find(s => s.type === receiptType && s.active)
+      if (series) {
+        const nextNumber = series.currentNumber + 1
+        setReceiptPreview(`${series.series}-${nextNumber.toString().padStart(8, '0')}`)
       } else {
         setReceiptPreview(null)
       }
     }
-
-    fetchSeriesPreview()
-  }, [receiptType])
-
-
+  }, [receiptType, seriesList])
 
   const change = Number(amountReceived) - totalAmount
 
@@ -114,50 +144,68 @@ export function QuickPaymentDialog({
     }
 
     setLoading(true)
-    const result = await processQuickPayment(orderId, {
-      method: paymentMethod,
-      amount: totalAmount,
-      receiptType,
-      customerDoc: customerDoc || undefined,
-      customerName: customerName || undefined,
-      customerAddress: customerAddress || undefined,
-      reference: reference || undefined,
-      notes: notes || undefined
-    })
 
-    setLoading(false)
+    try {
+      const result = await registerPayment({
+        orderId,
+        method: paymentMethod,
+        amount: totalAmount,
+        receiptType,
+        receiptNumber: receiptPreview || undefined,
+        customerDoc: customerDoc || undefined,
+        customerName: customerName || undefined,
+        customerAddress: customerAddress || undefined,
+        reference: reference || undefined,
+        notes: notes || undefined
+      })
 
-    if (result.success) {
-      toast.success("Pago procesado correctamente")
-      onOpenChange(false)
-      onSuccess?.()
+      if (result.success) {
+        toast.success(
+          result.paymentStatus === 'PAID'
+            ? '¡Pago completado!'
+            : `Pago parcial registrado. Pendiente: ${formatCurrency(result.amountDue || 0)}`
+        )
 
-      // Redirect to receipt page if payment ID is available
-      if (result.data?.payment?.id) {
-        router.push(`/dashboard/receipts/${result.data.payment.id}`)
+        // If we have a paymentId, fetch and show receipt
+        if (result.paymentId) {
+          const receipt = await getReceiptData(result.paymentId)
+          if (receipt) {
+            setReceiptData(receipt)
+            setShowReceipt(true)
+            // Don't close dialog yet - let user print first
+            return
+          }
+        }
+
+        // No receipt to show, complete
+        onOpenChange(false)
+        onSuccess?.()
+      } else {
+        toast.error(result.error || "Error al procesar el pago")
       }
-    } else {
-      toast.error(result.error || "Error al procesar el pago")
+    } catch (error) {
+      toast.error("Error al procesar el pago")
+    } finally {
+      setLoading(false)
     }
   }
 
-  const paymentMethods = [
-    { value: "CASH", label: "Efectivo", icon: Banknote },
-    { value: "CARD", label: "Tarjeta", icon: CreditCard },
-    { value: "YAPE", label: "Yape", icon: Smartphone },
-    { value: "PLIN", label: "Plin", icon: Smartphone },
-    { value: "TRANSFER", label: "Transferencia", icon: Building2 },
-    { value: "MIXED", label: "Mixto", icon: ArrowLeftRight },
-  ]
+  const handleReceiptClose = () => {
+    setShowReceipt(false)
+    setReceiptData(null)
+    onOpenChange(false)
+    onSuccess?.()
+  }
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog open={open && !showReceipt} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Procesar Pago</DialogTitle>
             <DialogDescription>
               Orden {orderNumber} - {formatCurrency(totalAmount)}
+              {tableInfo && <span className="block text-xs mt-1">{tableInfo}</span>}
             </DialogDescription>
           </DialogHeader>
 
@@ -193,6 +241,7 @@ export function QuickPaymentDialog({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="NOTA_VENTA">Nota de Venta (Ticket)</SelectItem>
+                  <SelectItem value="TICKET">Ticket</SelectItem>
                   <SelectItem value="BOLETA">Boleta</SelectItem>
                   <SelectItem value="FACTURA">Factura</SelectItem>
                 </SelectContent>
@@ -205,7 +254,7 @@ export function QuickPaymentDialog({
             </div>
 
             {/* Customer Info */}
-            {receiptType !== "NOTA_VENTA" && (
+            {receiptType !== "NOTA_VENTA" && receiptType !== "TICKET" && (
               <>
                 <div className="space-y-2">
                   <Label htmlFor="customerDoc">
@@ -257,7 +306,7 @@ export function QuickPaymentDialog({
                 />
                 {change >= 0 && (
                   <p className="text-sm text-muted-foreground">
-                    Vuelto: <span className="font-semibold">{formatCurrency(change)}</span>
+                    Vuelto: <span className="font-semibold text-green-600">{formatCurrency(change)}</span>
                   </p>
                 )}
               </div>
@@ -294,12 +343,25 @@ export function QuickPaymentDialog({
               Cancelar
             </Button>
             <Button onClick={handleSubmit} disabled={loading}>
-              {loading ? "Procesando..." : `Confirmar Pago ${formatCurrency(totalAmount)}`}
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Procesando...
+                </>
+              ) : (
+                `Confirmar Pago ${formatCurrency(totalAmount)}`
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
+      {/* Receipt Preview - shows automatically after payment */}
+      <ReceiptPreview
+        open={showReceipt}
+        onOpenChange={handleReceiptClose}
+        data={receiptData}
+      />
     </>
   )
 }

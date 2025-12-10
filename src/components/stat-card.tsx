@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
-import { LucideIcon } from "lucide-react"
+import { Banknote, CreditCard, LucideIcon } from "lucide-react"
+import { ComparisonBadge } from "@/components/dashboard/comparison-badge"
 
 interface StatCardProps {
   title: string
@@ -9,6 +10,9 @@ interface StatCardProps {
   icon: LucideIcon
   iconColor?: string
   className?: string
+  comparison?: number
+  cashSales?: string
+  cardSales?: string
 }
 
 export default function StatCard({
@@ -17,7 +21,10 @@ export default function StatCard({
   value,
   icon: Icon,
   iconColor = "text-muted-foreground",
-  className = ""
+  className = "",
+  comparison,
+  cashSales,
+  cardSales,
 }: StatCardProps) {
   return (
     <Card className={cn("border-border/50 hover:shadow-lg transition-shadow",
@@ -32,10 +39,25 @@ export default function StatCard({
         <Icon className={`h-4 w-4 ${iconColor}`} />
       </CardHeader>
       <CardContent>
-        <div className={`text-lg sm:text-2xl font-bold ${iconColor}`}>
+        <div className={`text-lg md:text-3xl font-bold ${iconColor}`}>
           {value}
         </div>
-        <p className="text-xs text-muted-foreground">{description}</p>
+        <div className="flex items-center gap-2 mt-1">
+          {description && (
+            <p className="text-xs text-muted-foreground">{description}</p>
+          )}
+          {comparison !== undefined && (
+            <ComparisonBadge value={comparison} />
+          )}
+          {cashSales !== undefined && (
+            <span className="flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-xs">
+              <Banknote className="h-3 w-3" />{cashSales}</span>
+          )}
+          {cardSales !== undefined && (
+            <span className="flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-xs">
+              <CreditCard className="h-3 w-3" />{cardSales}</span>
+          )}
+        </div>
       </CardContent>
     </Card>
   )

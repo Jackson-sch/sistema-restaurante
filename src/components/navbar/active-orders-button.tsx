@@ -48,7 +48,7 @@ export function ActiveOrdersButton() {
             {count > 0 && (
               <Badge
                 variant="destructive"
-                className="ml-2 h-5 min-w-5 px-1 text-xs"
+                className="ml-2 h-5 min-w-5 px-1 text-xs animate-bounce"
               >
                 {count}
               </Badge>

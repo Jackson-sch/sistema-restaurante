@@ -20,12 +20,17 @@ export async function getSalesReport(startDate?: Date, endDate?: Date) {
     const start = startDate || subDays(new Date(), 30)
     const end = endDate || new Date()
 
+    // Calculate previous period for comparison
+    const periodDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1
+    const previousStart = subDays(start, periodDays)
+    const previousEnd = subDays(start, 1)
+
     try {
-        // 1. Total Sales (Completed orders)
+        // Fetch current period orders
         const orders = await prisma.order.findMany({
             where: {
                 restaurantId,
-                status: { in: ["COMPLETED", "SERVED"] }, // Assuming served/completed means sold
+                status: { in: ["COMPLETED", "SERVED"] },
                 createdAt: {
                     gte: startOfDay(start),
                     lte: endOfDay(end),
@@ -36,12 +41,39 @@ export async function getSalesReport(startDate?: Date, endDate?: Date) {
             },
         })
 
+        // Fetch previous period orders for comparison
+        const previousOrders = await prisma.order.findMany({
+            where: {
+                restaurantId,
+                status: { in: ["COMPLETED", "SERVED"] },
+                createdAt: {
+                    gte: startOfDay(previousStart),
+                    lte: endOfDay(previousEnd),
+                },
+            },
+        })
+
+        // Current period metrics
         const totalSales = orders.reduce((sum, order) => sum + Number(order.total), 0)
         const totalOrders = orders.length
         const averageTicket = totalOrders > 0 ? totalSales / totalOrders : 0
 
+        // Previous period metrics
+        const previousTotalSales = previousOrders.reduce((sum, order) => sum + Number(order.total), 0)
+        const previousTotalOrders = previousOrders.length
+        const previousAverageTicket = previousTotalOrders > 0 ? previousTotalSales / previousTotalOrders : 0
+
+        // Calculate trend percentages
+        const calculateTrend = (current: number, previous: number): number => {
+            if (previous === 0) return current > 0 ? 100 : 0
+            return ((current - previous) / previous) * 100
+        }
+
+        const salesTrend = calculateTrend(totalSales, previousTotalSales)
+        const ordersTrend = calculateTrend(totalOrders, previousTotalOrders)
+        const ticketTrend = calculateTrend(averageTicket, previousAverageTicket)
+
         // 2. Sales by Payment Method
-        // We need to aggregate from payments, but only for the fetched orders to respect the date range
         const paymentMethods: Record<string, number> = {}
 
         orders.forEach(order => {
@@ -88,7 +120,7 @@ export async function getSalesReport(startDate?: Date, endDate?: Date) {
             }
         })
 
-        const salesTrend = Object.entries(dailySales).map(([date, amount]) => ({
+        const dailySalesTrend = Object.entries(dailySales).map(([date, amount]) => ({
             date,
             amount,
         })).sort((a, b) => a.date.localeCompare(b.date))
@@ -100,10 +132,14 @@ export async function getSalesReport(startDate?: Date, endDate?: Date) {
                     totalSales,
                     totalOrders,
                     averageTicket,
+                    // Trend percentages compared to previous period
+                    salesTrend: Math.round(salesTrend * 10) / 10,
+                    ordersTrend: Math.round(ordersTrend * 10) / 10,
+                    ticketTrend: Math.round(ticketTrend * 10) / 10,
                 },
                 salesByMethod,
                 salesByType: salesByTypeArray,
-                salesTrend,
+                salesTrend: dailySalesTrend,
             },
         }
 
@@ -355,20 +391,32 @@ export async function getInventoryReport() {
                     lowStockCount,
                 },
                 ingredients: ingredients.map(ing => ({
-                    ...ing,
+                    id: ing.id,
+                    name: ing.name,
+                    unit: ing.unit,
                     currentStock: Number(ing.currentStock),
                     minStock: Number(ing.minStock),
                     cost: Number(ing.cost),
                     value: Number(ing.currentStock) * Number(ing.cost),
+                    restaurantId: ing.restaurantId,
+                    createdAt: ing.createdAt,
+                    updatedAt: ing.updatedAt,
                 })),
                 lowStockIngredients: lowStockIngredients.map(ing => ({
-                    ...ing,
+                    id: ing.id,
+                    name: ing.name,
+                    unit: ing.unit,
                     currentStock: Number(ing.currentStock),
                     minStock: Number(ing.minStock),
                 })),
                 recentMovements: recentMovements.map(mov => ({
-                    ...mov,
+                    id: mov.id,
+                    type: mov.type,
                     quantity: Number(mov.quantity),
+                    reason: mov.reason,
+                    reference: mov.reference,
+                    createdAt: mov.createdAt,
+                    ingredientId: mov.ingredientId,
                     ingredientName: mov.ingredient.name,
                 })),
             },

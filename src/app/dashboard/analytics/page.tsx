@@ -61,7 +61,7 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
             Tendencias, rendimiento y proyecciones
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-center gap-2">
           <DashboardExportButton />
           <DateRangeFilter />
         </div>
@@ -78,7 +78,7 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
           <PeakHoursHeatmap data={peakHours} />
         </div>
 
-        <div className="col-span-1 h-[380px]">
+        <div className="col-span-1 md:h-[380px]">
           <CategoryBreakdown data={categoryPerformance} />
         </div>
 
@@ -102,7 +102,7 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
               </div>
             </div>
 
-            <div className="col-span-1 h-[400px]">
+            <div className="col-span-1 md:h-[400px]">
               <OrderTypeBreakdownChart data={orderTypeData.byType} />
             </div>
 

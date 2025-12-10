@@ -58,10 +58,15 @@ export function CashRegisterButton() {
               onClick={handleClick}
             >
               <DollarSign className="h-5 w-5" />
-              <span className="ml-2 hidden lg:inline">Caja</span>
+              <span className="ml-2 hidden md:inline">Caja</span>
+              {/* Small dot indicator for mobile */}
+              <span
+                className={`ml-1 md:hidden h-2 w-2 rounded-full ${isOpen ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}
+              />
+              {/* Full badge for desktop */}
               <Badge
                 variant={isOpen ? "default" : "secondary"}
-                className="ml-2 h-5 px-2 text-xs"
+                className="ml-2 h-5 px-2 text-xs hidden md:inline-flex"
               >
                 {isOpen ? "Abierta" : "Cerrada"}
               </Badge>

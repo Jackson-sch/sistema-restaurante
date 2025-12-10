@@ -78,7 +78,7 @@ export function StaffPerformanceReport() {
 
       <div className="grid gap-4 md:grid-cols-2">
         {/* Waiters Chart */}
-        <Card className="col-span-2 lg:col-span-1">
+        <Card className="col-span-2 lg:col-span-1 overflow-hidden">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="h-5 w-5" />
@@ -87,7 +87,7 @@ export function StaffPerformanceReport() {
             <CardDescription>Total vendido por cada mesero (órdenes completadas).</CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={staffChartConfig} className="min-h-[350px] w-full">
+            <ChartContainer config={staffChartConfig} className="min-h-[250px] md:min-h-[350px] w-full">
               <BarChart
                 accessibilityLayer
                 data={data.waiters}
@@ -101,7 +101,7 @@ export function StaffPerformanceReport() {
                   tickLine={false}
                   tickMargin={10}
                   axisLine={false}
-                  width={100}
+                  width={80}
                   className="text-xs"
                 />
                 <XAxis dataKey="totalSales" type="number" hide />
@@ -133,7 +133,7 @@ export function StaffPerformanceReport() {
         </Card>
 
         {/* Cashiers Chart */}
-        <Card className="col-span-2 lg:col-span-1">
+        <Card className="col-span-2 lg:col-span-1 overflow-hidden">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CreditCard className="h-5 w-5" />
@@ -142,7 +142,7 @@ export function StaffPerformanceReport() {
             <CardDescription>Total recaudado por cada cajero.</CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={staffChartConfig} className="min-h-[350px] w-full">
+            <ChartContainer config={staffChartConfig} className="min-h-[250px] md:min-h-[350px] w-full">
               <BarChart
                 accessibilityLayer
                 data={data.cashiers}
@@ -156,7 +156,7 @@ export function StaffPerformanceReport() {
                   tickLine={false}
                   tickMargin={10}
                   axisLine={false}
-                  width={100}
+                  width={80}
                   className="text-xs"
                 />
                 <XAxis dataKey="totalCollected" type="number" hide />

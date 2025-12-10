@@ -24,7 +24,7 @@ import {
   MapPin,
   QrCode,
 } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { cn, formatCurrency } from "@/lib/utils"
 
 interface TableQuickActionsProps {
   table: (Table & {
@@ -138,7 +138,7 @@ export function TableQuickActions({
           </SheetDescription>
         </SheetHeader>
 
-        <div className="mt-6 space-y-6">
+        <div className="space-y-6 p-4">
           {/* Table Info */}
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-sm">
@@ -189,7 +189,7 @@ export function TableQuickActions({
                         <span className="font-medium text-sm">{order.orderNumber || `#${order.id.slice(-4)}`}</span>
                         {order.total !== undefined && (
                           <span className="font-semibold text-sm">
-                            S/ {order.total.toFixed(2)}
+                            {formatCurrency(order.total)}
                           </span>
                         )}
                       </div>

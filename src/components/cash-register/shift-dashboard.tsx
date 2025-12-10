@@ -23,6 +23,8 @@ import {
 } from "lucide-react"
 import { format, formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
+import StatCard from "../stat-card"
+import Link from "next/link"
 
 interface Transaction {
     id: string
@@ -75,6 +77,54 @@ export function ShiftDashboard({ shift }: ShiftDashboardProps) {
     const netFlow = summary.totalIncome - summary.totalExpenses
     const transactionCount = transactions.length
 
+    const stats = [
+        {
+            title: "Efectivo en caja",
+            value: formatCurrency(summary.currentCash),
+            icon: Receipt,
+            iconColor: "text-blue-600",
+            description: "Efectivo Inicial",
+            cashSales: formatCurrency(summary.initialCash),
+        },
+        {
+            title: "Ventas Totales  ",
+            value: formatCurrency(summary.totalSales),
+            icon: Wallet,
+            iconColor: "text-green-600",
+            description: "",
+            cashSales: formatCurrency(summary.cashSales),
+            cardSales: formatCurrency(summary.cardSales),
+        },
+        {
+            title: "Ingresos",
+            value: formatCurrency(summary.totalIncome),
+            icon: Banknote,
+            iconColor: "text-green-600",
+            description: "Ingresos totales",
+        },
+        {
+            title: "Egresos",
+            value: formatCurrency(summary.totalExpenses),
+            icon: CircleDollarSign,
+            iconColor: "text-red-600",
+            description: "Egresos totales",
+        },
+        {
+            title: "Flujo neto",
+            value: formatCurrency(netFlow),
+            icon: ArrowRightLeft,
+            iconColor: netFlow >= 0 ? "text-green-600" : "text-red-600",
+            description: "Flujo neto",
+        },
+        {
+            title: "Movimientos",
+            value: transactionCount.toString(),
+            icon: Activity,
+            iconColor: "text-amber-600",
+            description: "Movimientos totales",
+        },
+    ]
+
     return (
         <div className="space-y-6">
             {/* Header with status */}
@@ -102,90 +152,52 @@ export function ShiftDashboard({ shift }: ShiftDashboardProps) {
                         </span>
                     </div>
                 </div>
-                <div className="flex gap-2">
-                    <TransactionDialog cashRegisterId={shift.id} />
-                    <CloseShiftDialog cashRegisterId={shift.id} expectedCash={summary.currentCash} />
-                </div>
+                <Button variant="outline" asChild>
+                    <Link href="/dashboard/cash-register/history">
+                        Ver Historial
+                    </Link>
+                </Button>
             </div>
 
+            {/* Quick Actions */}
+            <Card className="border-primary/20 bg-primary/5">
+                <CardContent className="py-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium">Acciones Rápidas:</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            <TransactionDialog
+                                cashRegisterId={shift.id}
+                                defaultType="INCOME"
+                                trigger={
+                                    <Button size="sm" variant="outline" className="gap-1.5 border-green-500/50 text-green-600 hover:bg-green-500/10">
+                                        <ArrowUpIcon className="h-4 w-4" />
+                                        <span className="hidden sm:inline">Ingreso</span>
+                                    </Button>
+                                }
+                            />
+                            <TransactionDialog
+                                cashRegisterId={shift.id}
+                                defaultType="EXPENSE"
+                                trigger={
+                                    <Button size="sm" variant="outline" className="gap-1.5 border-red-500/50 text-red-600 hover:bg-red-500/10">
+                                        <ArrowDownIcon className="h-4 w-4" />
+                                        <span className="hidden sm:inline">Egreso</span>
+                                    </Button>
+                                }
+                            />
+                            <CloseShiftDialog cashRegisterId={shift.id} expectedCash={summary.currentCash} />
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
             {/* Main stats */}
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {/* Cash in register - Primary card */}
-                <Card className="relative overflow-hidden border-emerald-200 bg-gradient-to-br from-emerald-50 to-background dark:border-emerald-900 dark:from-emerald-950/50">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
-                            Efectivo en Caja
-                        </CardTitle>
-                        <div className="rounded-full bg-emerald-500/10 p-2">
-                            <Wallet className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-3xl font-bold text-emerald-700 dark:text-emerald-300">
-                            {formatCurrency(summary.currentCash)}
-                        </div>
-                        <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                            <span className="rounded bg-muted px-1.5 py-0.5">
-                                Inicial: {formatCurrency(summary.initialCash || 0)}
-                            </span>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Total sales */}
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Ventas Totales</CardTitle>
-                        <div className="rounded-full bg-blue-500/10 p-2">
-                            <TrendingUp className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{formatCurrency(summary.totalSales)}</div>
-                        <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                            <span className="flex items-center gap-1 rounded bg-muted px-1.5 py-0.5">
-                                <Banknote className="h-3 w-3" />
-                                {formatCurrency(summary.cashSales)}
-                            </span>
-                            <span className="flex items-center gap-1 rounded bg-muted px-1.5 py-0.5">
-                                <CreditCard className="h-3 w-3" />
-                                {formatCurrency(summary.cardSales || 0)}
-                            </span>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Income */}
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Ingresos</CardTitle>
-                        <div className="rounded-full bg-green-500/10 p-2">
-                            <ArrowUpIcon className="h-4 w-4 text-green-600 dark:text-green-400" />
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                            +{formatCurrency(summary.totalIncome)}
-                        </div>
-                        <p className="mt-1 text-xs text-muted-foreground">Depósitos y ajustes positivos</p>
-                    </CardContent>
-                </Card>
-
-                {/* Expenses */}
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Egresos</CardTitle>
-                        <div className="rounded-full bg-red-500/10 p-2">
-                            <ArrowDownIcon className="h-4 w-4 text-red-600 dark:text-red-400" />
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-red-600 dark:text-red-400">
-                            -{formatCurrency(summary.totalExpenses)}
-                        </div>
-                        <p className="mt-1 text-xs text-muted-foreground">Retiros y gastos</p>
-                    </CardContent>
-                </Card>
+            <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+                {stats.map((stat) => (
+                    <StatCard key={stat.title} {...stat} />
+                ))}
             </div>
 
             {/* Net flow indicator */}
@@ -236,8 +248,8 @@ export function ShiftDashboard({ shift }: ShiftDashboardProps) {
                                 >
                                     <div
                                         className={`rounded-full p-2 ${tx.type === "INCOME"
-                                                ? "bg-green-500/10 text-green-600 dark:text-green-400"
-                                                : "bg-red-500/10 text-red-600 dark:text-red-400"
+                                            ? "bg-green-500/10 text-green-600 dark:text-green-400"
+                                            : "bg-red-500/10 text-red-600 dark:text-red-400"
                                             }`}
                                     >
                                         {tx.type === "INCOME" ? <ArrowUpIcon className="h-4 w-4" /> : <ArrowDownIcon className="h-4 w-4" />}

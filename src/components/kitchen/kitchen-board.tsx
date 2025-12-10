@@ -1,9 +1,12 @@
 "use client"
 
 import { KitchenOrderCard } from "./kitchen-order-card"
-import { Clock, ChefHat, Bell, Utensils, Sparkles, TrendingUp } from "lucide-react"
+import { Clock, ChefHat, Bell, Utensils, Sparkles, TrendingUp, Wifi, WifiOff } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
+import { useKitchenStream } from "@/hooks/use-kitchen-stream"
+import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 
 
 interface KitchenBoardProps {
@@ -65,6 +68,35 @@ const columns = [
 export function KitchenBoard({ orders, onRefresh }: KitchenBoardProps) {
     const [animateNew, setAnimateNew] = useState<Record<string, boolean>>({})
     const previousOrderIdsRef = useRef<Set<string>>(new Set())
+    const [isConnected, setIsConnected] = useState(false)
+    const router = useRouter()
+
+    // Real-time notifications via SSE
+    const handleNewOrder = useCallback((newOrders: any[]) => {
+        if (newOrders.length > 0) {
+            const orderNumbers = newOrders.map(o => o.orderNumber).join(", ")
+            toast.success(`Nueva orden: ${orderNumbers}`, {
+                description: "Nueva orden recibida en cocina",
+                duration: 5000,
+            })
+            // Play notification sound
+            try {
+                const audio = new Audio("/sounds/notification.mp3")
+                audio.volume = 0.5
+                audio.play().catch(() => { })
+            } catch { }
+            // Refresh data
+            router.refresh()
+            onRefresh?.()
+        }
+    }, [router, onRefresh])
+
+    useKitchenStream({
+        onNewOrder: handleNewOrder,
+        onConnected: () => setIsConnected(true),
+        onError: () => setIsConnected(false),
+        enabled: true,
+    })
 
     const getOrdersByStatuses = (statuses: string[]) => orders.filter((o) => statuses.includes(o.status))
 

@@ -15,8 +15,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { format } from "date-fns"
-import { es } from "date-fns/locale"
+import StatCard from "@/components/stat-card"
+import { formatCurrency, formatDate } from "@/lib/utils"
 
 export function InventoryReport() {
   const [data, setData] = useState<any>(null)
@@ -47,6 +47,31 @@ export function InventoryReport() {
 
   if (!data) return null
 
+  /* Capturamos el Total de Ingredientes, Valor del Inventario y Alertas de Stock */
+  const totalIngredients = data.summary?.totalIngredients
+  const totalValue = formatCurrency(data.summary?.totalValue)
+  const lowStockCount = data.summary?.lowStockCount
+
+  const stats = [{
+    title: "Total Ingredientes",
+    value: totalIngredients,
+    icon: Package,
+    iconColor: "text-blue-500",
+    description: "Registrados en el sistema"
+  }, {
+    title: "Valor del Inventario",
+    value: totalValue,
+    icon: DollarSign,
+    iconColor: "text-green-500",
+    description: "Costo total estimado"
+  }, {
+    title: "Alertas de Stock",
+    value: lowStockCount,
+    icon: AlertTriangle,
+    iconColor: lowStockCount > 0 ? "text-red-500" : "text-muted-foreground",
+    description: "Ingredientes con stock bajo"
+  }]
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -61,39 +86,13 @@ export function InventoryReport() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Ingredientes</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{data.summary.totalIngredients}</div>
-            <p className="text-xs text-muted-foreground">Registrados en el sistema</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Valor del Inventario</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">S/ {data.summary.totalValue.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">Costo total estimado</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Alertas de Stock</CardTitle>
-            <AlertTriangle className={`h-4 w-4 ${data.summary.lowStockCount > 0 ? "text-red-500" : "text-muted-foreground"}`} />
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${data.summary.lowStockCount > 0 ? "text-red-500" : ""}`}>
-              {data.summary.lowStockCount}
-            </div>
-            <p className="text-xs text-muted-foreground">Ingredientes con stock bajo</p>
-          </CardContent>
-        </Card>
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-3">
+        {stats.map((stat) => (
+          <StatCard
+            key={stat.title}
+            {...stat}
+          />
+        ))}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -109,6 +108,7 @@ export function InventoryReport() {
           <CardContent>
             {data.lowStockIngredients.length === 0 ? (
               <div className="flex h-[200px] items-center justify-center text-muted-foreground">
+                
                 No hay alertas de stock bajo.
               </div>
             ) : (
@@ -166,7 +166,7 @@ export function InventoryReport() {
                   {data.recentMovements.map((move: any) => (
                     <TableRow key={move.id}>
                       <TableCell className="text-xs text-muted-foreground">
-                        {format(new Date(move.createdAt), "dd/MM HH:mm", { locale: es })}
+                        {formatDate(move.createdAt, "dd/MM HH:mm")}
                       </TableCell>
                       <TableCell className="font-medium text-sm">{move.ingredientName}</TableCell>
                       <TableCell>

@@ -29,9 +29,10 @@ import {
 interface TransactionDialogProps {
     cashRegisterId: string
     trigger?: React.ReactNode
+    defaultType?: "INCOME" | "EXPENSE" | "WITHDRAWAL"
 }
 
-export function TransactionDialog({ cashRegisterId, trigger }: TransactionDialogProps) {
+export function TransactionDialog({ cashRegisterId, trigger, defaultType = "EXPENSE" }: TransactionDialogProps) {
     const [open, setOpen] = useState(false)
     const [isPending, startTransition] = useTransition()
 
@@ -45,7 +46,7 @@ export function TransactionDialog({ cashRegisterId, trigger }: TransactionDialog
         resolver: zodResolver(transactionSchema),
         defaultValues: {
             amount: 0,
-            type: "EXPENSE",
+            type: defaultType,
             concept: "",
             reference: "",
         },
@@ -79,7 +80,7 @@ export function TransactionDialog({ cashRegisterId, trigger }: TransactionDialog
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="type">Tipo</Label>
-                        <Select onValueChange={(val) => setValue("type", val as any)} defaultValue="EXPENSE">
+                        <Select onValueChange={(val) => setValue("type", val as any)} defaultValue={defaultType}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Seleccionar tipo" />
                             </SelectTrigger>

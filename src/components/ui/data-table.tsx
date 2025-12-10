@@ -57,6 +57,8 @@ interface DataTableProps<TData, TValue> {
     sortBy?: string
     sortOrder?: 'asc' | 'desc'
     onSortChange?: (sortBy: string, sortOrder: 'asc' | 'desc') => void
+    // Row click handler
+    onRowClick?: (row: TData) => void
 }
 
 export function DataTable<TData, TValue>({
@@ -74,6 +76,7 @@ export function DataTable<TData, TValue>({
     sortBy,
     sortOrder,
     onSortChange,
+    onRowClick,
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>(
         sortBy && sortOrder ? [{ id: sortBy, desc: sortOrder === 'desc' }] : []
@@ -144,10 +147,12 @@ export function DataTable<TData, TValue>({
                     value={searchValue !== undefined ? searchValue : (globalFilter ?? "")}
                     onChange={onSearchChange || setGlobalFilter}
                     placeholder={searchPlaceholder}
-                    className="w-full max-w-sm"
+                    className="w-full md:max-w-sm"
                 />
-                <div className="flex items-center gap-2">
-                    {filterComponent}
+                <div className="flex items-center gap-2 w-full md:w-auto">
+                    <div className="flex-1 md:flex-none">
+                        {filterComponent}
+                    </div>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline">
@@ -204,6 +209,8 @@ export function DataTable<TData, TValue>({
                                 <TableRow
                                     key={row.id}
                                     data-state={row.getIsSelected() && "selected"}
+                                    className={onRowClick ? "cursor-pointer hover:bg-muted/50" : undefined}
+                                    onClick={() => onRowClick?.(row.original)}
                                 >
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell key={cell.id}>
@@ -230,16 +237,19 @@ export function DataTable<TData, TValue>({
             </div>
 
             {/* Pagination */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2">
-                <div className="text-sm text-muted-foreground">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4 px-2">
+                <div className="text-xs sm:text-sm text-muted-foreground">
                     {isServerSide
                         ? `${data.length} resultado(s)`
                         : `${table.getFilteredRowModel().rows.length} resultado(s)`
                     }
                 </div>
-                <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 lg:gap-8">
-                    <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium whitespace-nowrap">Filas por página</p>
+                <div className="flex flex-row items-center gap-2 sm:gap-4 lg:gap-6">
+                    <div className="flex items-center gap-1 sm:gap-2">
+                        <p className="text-xs sm:text-sm font-medium whitespace-nowrap">
+                            <span className="hidden sm:inline">Filas por página</span>
+                            <span className="sm:hidden">Filas</span>
+                        </p>
                         <Select
                             value={`${table.getState().pagination.pageSize}`}
                             onValueChange={(value) => {
@@ -251,7 +261,7 @@ export function DataTable<TData, TValue>({
                                 }
                             }}
                         >
-                            <SelectTrigger className="h-8 w-[70px]">
+                            <SelectTrigger className="h-7 sm:h-8 w-[60px] sm:w-[70px]">
                                 <SelectValue placeholder={table.getState().pagination.pageSize} />
                             </SelectTrigger>
                             <SelectContent side="top">
@@ -263,10 +273,9 @@ export function DataTable<TData, TValue>({
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center justify-center text-sm font-medium whitespace-nowrap">
-                            Pág. {table.getState().pagination.pageIndex + 1} de{" "}
-                            {isServerSide ? pageCount : table.getPageCount()}
+                    <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-center text-xs sm:text-sm font-medium whitespace-nowrap">
+                            {table.getState().pagination.pageIndex + 1}/{isServerSide ? pageCount : table.getPageCount()}
                         </div>
                         <div className="flex items-center gap-2">
                             <Button

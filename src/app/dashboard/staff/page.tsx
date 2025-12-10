@@ -109,9 +109,9 @@ export default function StaffPage() {
     }
 
     const filterComponent = (
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
             <Select value={roleFilter} onValueChange={setRoleFilter}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-[130px] md:w-[150px]">
                     <SelectValue placeholder="Filtrar por rol" />
                 </SelectTrigger>
                 <SelectContent>
@@ -126,8 +126,8 @@ export default function StaffPage() {
             </Select>
 
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Filtrar por estado" />
+                <SelectTrigger className="w-[100px] md:w-[130px]">
+                    <SelectValue placeholder="Estado" />
                 </SelectTrigger>
                 <SelectContent>
                     <SelectItem value="ALL">Todos</SelectItem>
@@ -136,9 +136,9 @@ export default function StaffPage() {
                 </SelectContent>
             </Select>
 
-            <Button onClick={handleCreate}>
-                <Plus className="mr-2 h-4 w-4" />
-                Nuevo Personal
+            <Button onClick={handleCreate} size="sm">
+                <Plus className="mr-1 h-4 w-4" />
+                <span className="hidden sm:inline">Nuevo</span>
             </Button>
         </div>
     );
@@ -152,12 +152,14 @@ export default function StaffPage() {
                 </p>
             </div>
 
-            <DataTable
-                columns={columns}
-                data={filteredStaff}
-                searchPlaceholder="Buscar por nombre o email..."
-                filterComponent={filterComponent}
-            />
+            <div className="overflow-x-auto">
+                <DataTable
+                    columns={columns}
+                    data={filteredStaff}
+                    searchPlaceholder="Buscar por nombre o email..."
+                    filterComponent={filterComponent}
+                />
+            </div>
 
             <StaffDialog
                 open={dialogOpen}

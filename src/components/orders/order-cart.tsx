@@ -12,8 +12,9 @@ import { useState } from "react"
 import type { CartItem } from "@/types/order"
 import { TableSelector, type TableData } from "./table-selector"
 import type { OrderType } from "./order-type-selector"
-import type { CustomerInfo } from "./customer-info-form"
-import { OrderTypeConfig } from "./order-type-config"
+import type { CustomerInfo } from "@/components/orders/customer-info-form"
+import { OrderTypeConfig } from "@/components/orders/order-type-config"
+
 interface OrderCartProps {
     items: CartItem[]
     onRemove: (tempId: string) => void

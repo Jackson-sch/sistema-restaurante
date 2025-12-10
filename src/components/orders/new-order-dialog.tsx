@@ -9,7 +9,7 @@ import {
     DrawerDescription,
 } from "@/components/ui/drawer"
 import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
+import { ClipboardPlus } from "lucide-react"
 import { OrderInterface, type ProductWithRelations } from "./order-interface"
 import { Category } from "@prisma/client"
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
@@ -86,8 +86,8 @@ export function NewOrderDialog({
             {!preselectedTable && (
                 <DrawerTrigger asChild>
                     <Button size={buttonSize} variant={buttonVariant} className="shadow-md">
-                        <Plus className="h-5 w-5" />
-                        {showLabel && <span className="ml-2">Nuevo Pedido</span>}
+                        <ClipboardPlus className="h-5 w-5" />
+                        {showLabel && <span className="ml-2 hidden md:inline">Nuevo Pedido</span>}
                     </Button>
                 </DrawerTrigger>
             )}

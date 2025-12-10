@@ -47,7 +47,70 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     )
   }
 
-  const stats = result.data
+  const data = result.data
+
+  const stats = [
+    {
+      title: "Ventas Totales",
+      value: formatCurrency(data.sales.current),
+      description: `${data.orders.current} órdenes`,
+      icon: DollarSign,
+      comparison: data.sales.change,
+      iconColor: "text-green-600",
+      iconBgColor: "bg-green-100 dark:bg-green-900/30"
+    },
+    {
+      title: "Ticket Promedio",
+      value: formatCurrency(data.averageTicket.current),
+      description: "Por orden completada",
+      icon: TrendingUp,
+      comparison: data.averageTicket.change,
+      iconColor: "text-blue-600",
+      iconBgColor: "bg-blue-100 dark:bg-blue-900/30"
+    },
+    {
+      title: "Tiempo Promedio",
+      value: `${data.averageTime} min`,
+      description: "De atención por orden",
+      icon: Clock,
+      iconColor: "text-purple-600",
+      iconBgColor: "bg-purple-100 dark:bg-purple-900/30"
+    },
+    {
+      title: "Órdenes Activas",
+      value: data.activeOrders,
+      description: "En proceso ahora",
+      icon: ShoppingCart,
+      iconColor: "text-orange-600",
+      iconBgColor: "bg-orange-100 dark:bg-orange-900/30"
+    },
+    {
+      title: "Mesas Ocupadas",
+      value: `${data.occupiedTables}/${data.totalTables}`,
+      description: `${Math.round((data.occupiedTables / data.totalTables) * 100)}% ocupación`,
+      icon: Users,
+      iconColor: "text-cyan-600",
+      iconBgColor: "bg-cyan-100 dark:bg-cyan-900/30"
+    },
+    {
+      title: "Stock Bajo",
+      value: data.lowStockCount,
+      description: data.lowStockCount > 0 ? "Requieren atención" : "Todo en orden",
+      icon: AlertTriangle,
+      className: data.lowStockCount > 0 ? "border-orange-500" : "",
+      iconColor: data.lowStockCount > 0 ? "text-orange-600" : "text-green-600",
+      iconBgColor: data.lowStockCount > 0 ? "bg-orange-100 dark:bg-orange-900/30" : "bg-green-100 dark:bg-green-900/30"
+    },
+    {
+      title: "Órdenes Completadas",
+      value: data.orders.current,
+      description: "En proceso ahora",
+      icon: ShoppingCart,
+      iconColor: "text-orange-600",
+      iconBgColor: "bg-orange-100 dark:bg-orange-900/30",
+      comparison: data.orders.change,
+    }
+  ]
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
@@ -64,7 +127,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   }
 
   // Prepare chart data
-  const salesChartData = stats.salesByDay.map(day => ({
+  const salesChartData = data.salesByDay.map(day => ({
     name: format(new Date(day.date + 'T00:00:00'), "dd MMM", { locale: es }),
     value: day.total,
   }))
@@ -82,74 +145,13 @@ export default async function DashboardPage({ searchParams }: PageProps) {
       </div>
 
       {/* Alerts Panel */}
-      <AlertsPanel alerts={stats.alerts || []} />
+      <AlertsPanel alerts={data.alerts || []} />
 
       {/* Main Stats Grid */}
-      < div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4" >
-        <StatCard
-          title="Ventas Totales"
-          value={formatCurrency(stats.sales.current)}
-          description={`${stats.orders.current} órdenes`}
-          icon={DollarSign}
-          comparison={stats.sales.change}
-          iconColor="text-green-600"
-          iconBgColor="bg-green-100 dark:bg-green-900/30"
-        />
-        <StatCard
-          title="Ticket Promedio"
-          value={formatCurrency(stats.averageTicket.current)}
-          description="Por orden completada"
-          icon={TrendingUp}
-          comparison={stats.averageTicket.change}
-          iconColor="text-blue-600"
-          iconBgColor="bg-blue-100 dark:bg-blue-900/30"
-        />
-        <StatCard
-          title="Tiempo Promedio"
-          value={`${stats.averageTime} min`}
-          description="De atención por orden"
-          icon={Clock}
-          iconColor="text-purple-600"
-          iconBgColor="bg-purple-100 dark:bg-purple-900/30"
-        />
-        <StatCard
-          title="Órdenes Activas"
-          value={stats.activeOrders}
-          description="En proceso ahora"
-          icon={ShoppingCart}
-          iconColor="text-orange-600"
-          iconBgColor="bg-orange-100 dark:bg-orange-900/30"
-        />
-      </div >
-
-      {/* Secondary Stats */}
-      < div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3" >
-        <StatCard
-          title="Mesas Ocupadas"
-          value={`${stats.occupiedTables}/${stats.totalTables}`}
-          description={`${Math.round((stats.occupiedTables / stats.totalTables) * 100)}% ocupación`}
-          icon={Users}
-          iconColor="text-cyan-600"
-          iconBgColor="bg-cyan-100 dark:bg-cyan-900/30"
-        />
-        <StatCard
-          title="Stock Bajo"
-          value={stats.lowStockCount}
-          description={stats.lowStockCount > 0 ? "Requieren atención" : "Todo en orden"}
-          icon={AlertTriangle}
-          className={stats.lowStockCount > 0 ? "border-orange-500" : ""}
-          iconColor={stats.lowStockCount > 0 ? "text-orange-600" : "text-green-600"}
-          iconBgColor={stats.lowStockCount > 0 ? "bg-orange-100 dark:bg-orange-900/30" : "bg-green-100 dark:bg-green-900/30"}
-        />
-        <StatCard
-          title="Órdenes Completadas"
-          value={stats.orders.current}
-          description="En el período"
-          icon={ShoppingCart}
-          comparison={stats.orders.change}
-          iconColor="text-indigo-600"
-          iconBgColor="bg-indigo-100 dark:bg-indigo-900/30"
-        />
+      < div className="grid gap-4 grid-cols-2 lg:grid-cols-4" >
+        {stats.map((stat) => (
+          <StatCard key={stat.title} {...stat} />
+        ))}
       </div >
 
       <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
@@ -175,8 +177,8 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {stats.salesByCategory.length > 0 ? (
-              <DonutChart data={stats.salesByCategory} height={300} />
+            {data.salesByCategory.length > 0 ? (
+              <DonutChart data={data.salesByCategory} height={300} />
             ) : (
               <div className="flex items-center justify-center h-[250px] text-muted-foreground">
                 No hay datos
@@ -197,7 +199,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {stats.topProducts.map((product, index) => (
+              {data.topProducts.map((product, index) => (
                 <div key={index} className="flex items-center gap-4">
                   <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-bold">
                     {index + 1}
@@ -215,7 +217,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                   </div>
                 </div>
               ))}
-              {stats.topProducts.length === 0 && (
+              {data.topProducts.length === 0 && (
                 <p className="text-sm text-muted-foreground text-center py-4">
                   No hay datos de ventas
                 </p>
@@ -234,7 +236,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {stats.lowStockItems.slice(0, 5).map((item) => (
+              {data.lowStockItems.slice(0, 5).map((item) => (
                 <div key={item.id} className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0">
                   <div className="space-y-1">
                     <p className="text-sm font-medium">{item.name}</p>
@@ -252,7 +254,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                   </div>
                 </div>
               ))}
-              {stats.lowStockItems.length === 0 && (
+              {data.lowStockItems.length === 0 && (
                 <p className="text-sm text-muted-foreground text-center py-4">
                   ✓ Todo el stock está en niveles óptimos
                 </p>
@@ -272,7 +274,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {stats.recentOrders.map((order) => (
+            {data.recentOrders.map((order) => (
               <div key={order.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
                 <div className="space-y-1">
                   <p className="text-sm font-medium">
@@ -298,7 +300,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                 </div>
               </div>
             ))}
-            {stats.recentOrders.length === 0 && (
+            {data.recentOrders.length === 0 && (
               <p className="text-sm text-muted-foreground text-center py-4">
                 No hay órdenes en este período
               </p>

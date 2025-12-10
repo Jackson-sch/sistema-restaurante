@@ -112,7 +112,7 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
 
                     <div className="flex items-center justify-between pt-2 border-t border-border/50">
                         <div className="flex items-baseline gap-1">
-                            <span className="text-2xl font-black text-foreground">S/ {Number(product.price).toFixed(2)}</span>
+                            <span className="text-2xl font-black text-foreground">{formatCurrency(Number(product.price))}</span>
                         </div>
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                             <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
