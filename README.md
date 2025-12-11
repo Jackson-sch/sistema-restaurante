@@ -30,6 +30,7 @@ Sistema integral de punto de venta (POS) y gestión para restaurantes, desarroll
 - Creación rápida de órdenes con interfaz intuitiva
 - Soporte para tipos: **Mesa**, **Para llevar**, **Delivery**
 - Modificadores y variantes de productos
+- **Visualización de ingredientes**: El mesero puede ver qué contiene cada plato
 - Notas especiales por ítem
 - Estado de pedidos en tiempo real
 
@@ -66,9 +67,10 @@ Sistema integral de punto de venta (POS) y gestión para restaurantes, desarroll
 - Recetas por producto
 
 ### 👥 Gestión de Personal
-- Roles: Admin, Gerente, Mesero, Cajero, Cocina
-- Sistema de permisos granular
+- Roles: **Admin**, **Gerente**, **Mesero**, **Cajero**, **Cocina**
+- Sistema de permisos granular por ruta
 - Activación/desactivación de usuarios
+- Control de acceso basado en roles (RBAC)
 
 ### 🧾 Pagos y Comprobantes
 - Múltiples métodos: Efectivo, Tarjeta, Yape, Plin
@@ -81,6 +83,11 @@ Sistema integral de punto de venta (POS) y gestión para restaurantes, desarroll
 - Modo oscuro/claro
 - Animaciones fluidas
 - Componentes accesibles
+
+### 📱 Progressive Web App (PWA)
+- Instalable en dispositivos móviles y desktop
+- Funciona sin conexión (caché de recursos)
+- Experiencia nativa en cualquier plataforma
 
 ---
 
@@ -98,6 +105,7 @@ Sistema integral de punto de venta (POS) y gestión para restaurantes, desarroll
 | **Tablas** | TanStack Table |
 | **Animaciones** | Framer Motion |
 | **Exportación** | xlsx, @react-pdf/renderer |
+| **PWA** | @ducanh2912/next-pwa |
 
 ---
 
@@ -252,6 +260,7 @@ Página de inicio con estadísticas del día:
 - Filtros por estado
 - Detalles y edición
 - Historial
+- **Ver ingredientes** al agregar productos al carrito
 
 ### Cocina (`/dashboard/kitchen`)
 - Vista en tiempo real

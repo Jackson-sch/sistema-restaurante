@@ -29,6 +29,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Sistema de Restaurante",
   description: "Sistema de Restaurante para gestionar pedidos y facturación",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Sistema Restaurante",
+  },
 };
 
 export default function RootLayout({

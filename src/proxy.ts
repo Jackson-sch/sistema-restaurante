@@ -14,8 +14,8 @@ const PROTECTED_ROUTES = [
         // Kitchen is excluded from the main orders list
     },
     {
-        pattern: /^\/dashboard\/menu\/categories(\/.*)?$/,
-        // Categories: Admin, Manager
+        pattern: /^\/dashboard\/menu(\/.*)?$/,
+        // Menu (all): Admin, Manager
         allowedRoles: ["ADMIN", "MANAGER"],
     },
     {
@@ -52,6 +52,46 @@ const PROTECTED_ROUTES = [
         pattern: /^\/dashboard\/reports(\/.*)?$/,
         // Reports: Admin, Manager
         allowedRoles: ["ADMIN", "MANAGER"],
+    },
+    {
+        pattern: /^\/dashboard\/analytics(\/.*)?$/,
+        // Analytics: Admin, Manager
+        allowedRoles: ["ADMIN", "MANAGER"],
+    },
+    {
+        pattern: /^\/dashboard\/combos(\/.*)?$/,
+        // Combos: Admin, Manager
+        allowedRoles: ["ADMIN", "MANAGER"],
+    },
+    {
+        pattern: /^\/dashboard\/discounts(\/.*)?$/,
+        // Discounts: Admin, Manager
+        allowedRoles: ["ADMIN", "MANAGER"],
+    },
+    {
+        pattern: /^\/dashboard\/inventory(\/.*)?$/,
+        // Inventory: Admin, Manager
+        allowedRoles: ["ADMIN", "MANAGER"],
+    },
+    {
+        pattern: /^\/dashboard\/kitchen(\/.*)?$/,
+        // Kitchen: Admin, Manager, Kitchen staff
+        allowedRoles: ["ADMIN", "MANAGER", "KITCHEN"],
+    },
+    {
+        pattern: /^\/dashboard\/receipts(\/.*)?$/,
+        // Receipts: Admin, Manager, Cashier
+        allowedRoles: ["ADMIN", "MANAGER", "CASHIER"],
+    },
+    {
+        pattern: /^\/dashboard\/reservations(\/.*)?$/,
+        // Reservations: Admin, Manager, Waiter
+        allowedRoles: ["ADMIN", "MANAGER", "WAITER"],
+    },
+    {
+        pattern: /^\/dashboard\/pruebas(\/.*)?$/,
+        // Pruebas: Admin only (development)
+        allowedRoles: ["ADMIN"],
     },
 ]
 

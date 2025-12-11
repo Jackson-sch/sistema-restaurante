@@ -107,14 +107,13 @@ export default async function OrdersPage({
                     }))
                 }
             })),
-            ingredients: product.ingredients.map(r => ({
-                ...r,
+            recipe: product.ingredients.map(r => ({
                 quantity: Number(r.quantity),
+                variantId: r.variantId,
                 ingredient: {
-                    ...r.ingredient,
-                    cost: Number(r.ingredient.cost),
-                    currentStock: Number(r.ingredient.currentStock),
-                    minStock: Number(r.ingredient.minStock)
+                    id: r.ingredient.id,
+                    name: r.ingredient.name,
+                    unit: r.ingredient.unit
                 }
             }))
         }));

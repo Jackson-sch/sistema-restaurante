@@ -3,11 +3,11 @@
 import type React from "react"
 
 import { useState } from "react"
-import type { ProductWithRelations, CartItemInput } from "./order-interface"
+import type { ProductWithRelations, CartItemInput } from "@/components/orders/order-interface"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { formatCurrency } from "@/lib/utils"
-import { ProductDialog } from "./product-dialog"
+import { AddToCartDialog } from "@/components/orders/add-to-cart-dialog"
 import Image from "next/image"
 import { Plus, Sparkles, ShoppingCart } from "lucide-react"
 
@@ -125,7 +125,7 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
                 <div className="absolute inset-0 bg-primary/5 opacity-0 active:opacity-100 transition-opacity pointer-events-none" />
             </Card>
 
-            <ProductDialog product={product} open={isDialogOpen} onOpenChange={setIsDialogOpen} onAddToCart={onAddToCart} />
+            <AddToCartDialog product={product} open={isDialogOpen} onOpenChange={setIsDialogOpen} onAddToCart={onAddToCart} />
         </>
     )
 }

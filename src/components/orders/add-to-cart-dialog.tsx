@@ -1,28 +1,27 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { ProductWithRelations, CartItemInput } from './order-interface';
+import type { ProductWithRelations, CartItemInput } from '@/components/orders/order-interface';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { formatCurrency } from '@/lib/utils';
-import { Minus, Plus, ChefHat, ChevronDown } from 'lucide-react';
+import { Minus, Plus, ChefHat } from 'lucide-react';
 import { Modifier } from '@prisma/client';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { toast } from "sonner";
 
-interface ProductDialogProps {
+interface AddToCartDialogProps {
     product: ProductWithRelations;
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onAddToCart: (item: CartItemInput) => void;
 }
 
-export function ProductDialog({ product, open, onOpenChange, onAddToCart }: ProductDialogProps) {
+export function AddToCartDialog({ product, open, onOpenChange, onAddToCart }: AddToCartDialogProps) {
     const [selectedVariantId, setSelectedVariantId] = useState<string | undefined>(
         product.variants.length > 0 ? product.variants[0].id : undefined
     );
@@ -154,7 +153,7 @@ export function ProductDialog({ product, open, onOpenChange, onAddToCart }: Prod
                             </div>
                         )}
 
-                        {/* Ingredients */}
+                        {/* Ingredients - Direct display for waiters */}
                         {product.recipe && product.recipe.length > 0 && (() => {
                             // Filter ingredients: show base (variantId=null) + selected variant ingredients
                             const relevantIngredients = product.recipe.filter(r =>
@@ -162,26 +161,15 @@ export function ProductDialog({ product, open, onOpenChange, onAddToCart }: Prod
                             );
                             if (relevantIngredients.length === 0) return null;
                             return (
-                                <Collapsible className="border rounded-md">
-                                    <CollapsibleTrigger className="flex w-full items-center justify-between p-3 hover:bg-muted/50 transition-colors">
-                                        <div className="flex items-center gap-2">
-                                            <ChefHat className="h-4 w-4 text-muted-foreground" />
-                                            <span className="text-sm font-medium">Ingredientes</span>
-                                            <Badge variant="secondary" className="text-xs">{relevantIngredients.length}</Badge>
-                                        </div>
-                                        <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 in-data-[state=open]:rotate-180" />
-                                    </CollapsibleTrigger>
-                                    <CollapsibleContent className="border-t">
-                                        <div className="p-3 space-y-1.5">
-                                            {relevantIngredients.map((item, idx) => (
-                                                <div key={idx} className="flex items-center justify-between text-sm py-1">
-                                                    <span className="text-muted-foreground">• {item.ingredient.name}</span>
-                                                    <span className="text-xs font-medium text-foreground">{item.quantity} {item.ingredient.unit}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </CollapsibleContent>
-                                </Collapsible>
+                                <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <ChefHat className="h-4 w-4 text-muted-foreground" />
+                                        <span className="text-sm font-medium">¿Qué contiene?</span>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground leading-relaxed">
+                                        {relevantIngredients.map(item => item.ingredient.name).join(', ')}
+                                    </p>
+                                </div>
                             );
                         })()}
 
